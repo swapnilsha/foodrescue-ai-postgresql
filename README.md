@@ -1,309 +1,747 @@
 # FoodRescue AI 🍎🤖
 
-An AI-powered surplus food redistribution platform built using Java, Spring Boot, MySQL, and Thymeleaf with Bootstrap. It is designed to bridge the gap between food donors (restaurants, events) and local NGOs, ensuring surplus food is rescued safely and efficiently.
+An AI-assisted surplus food redistribution platform built with **Java, Spring Boot, PostgreSQL, Spring Security, JPA/Hibernate, Thymeleaf, JavaScript, and WebSockets**.
+
+FoodRescue AI is designed to connect food donors with NGOs so that surplus food can be identified, donated, tracked, and distributed efficiently before it expires.
 
 ---
 
 ## 📖 Table of Contents
-1. [Project Description](#project-description)
-2. [Problem Statement](#problem-statement)
-3. [Project Objectives](#project-objectives)
-4. [Key Features](#key-features)
-5. [User Roles](#user-roles)
-6. [System Workflow](#system-workflow)
-7. [Technology Stack](#technology-stack)
-8. [System Architecture](#system-architecture)
-9. [Project Structure](#project-structure)
-10. [Database Design & Migrations](#database-design--migrations)
-11. [API Documentation](#api-documentation)
-12. [Environment Configuration](#environment-configuration)
-13. [Local Development Setup](#local-development-setup)
-14. [Docker Deployment Setup](#docker-deployment-setup)
-15. [Testing](#testing)
-16. [Future Enhancements](#future-enhancements)
-17. [License](#license)
-18. [Author](#author)
+
+1. [Project Overview](#-project-overview)
+2. [Problem Statement](#-problem-statement)
+3. [Project Objectives](#-project-objectives)
+4. [Key Features](#-key-features)
+5. [User Roles](#-user-roles)
+6. [System Workflow](#-system-workflow)
+7. [Technology Stack](#-technology-stack)
+8. [System Architecture](#-system-architecture)
+9. [Project Structure](#-project-structure)
+10. [Database Design & Migrations](#-database-design--migrations)
+11. [API Documentation](#-api-documentation)
+12. [Environment Configuration](#-environment-configuration)
+13. [Local Development Setup](#-local-development-setup)
+14. [Docker Deployment](#-docker-deployment)
+15. [Testing](#-testing)
+16. [MySQL to PostgreSQL Migration](#-mysql-to-postgresql-migration)
+17. [My Contribution](#-my-contribution)
+18. [Future Enhancements](#-future-enhancements)
+19. [License](#-license)
+20. [Author](#-author)
 
 ---
 
-## 💡 Project Description
-**FoodRescue AI** is a real-time, full-stack web application designed to solve food waste. Using AI freshness prediction, donors can quickly evaluate the quality of surplus food by uploading an image. The application facilitates discovery of local verified NGOs, manages the delivery/pickup workflow, tracks progress on maps, and logs platform activity via audit trails.
+## 🚀 Project Overview
+
+**FoodRescue AI** is a full-stack web application designed to reduce food waste by connecting food donors with NGOs and rescue partners.
+
+The platform provides functionality for:
+
+- Donor registration and authentication
+- Surplus food donation management
+- Food image upload and analysis
+- NGO discovery
+- Donation request management
+- Pickup and delivery workflow tracking
+- Notifications
+- Real-time communication
+- Audit logging
+- Role-based access control
+
+The application follows a layered Spring Boot architecture with controllers, services, repositories, entities, DTOs, security components, and database migrations.
 
 ---
 
 ## ⚠️ Problem Statement
-According to the UN, nearly one-third of all food produced globally goes to waste, while millions suffer from hunger. Restaurants, hotels, and event organizers often have large quantities of edible surplus food but lack a direct, trusted, and efficient channel to deliver it to those in need before it spoils.
+
+Large quantities of edible food are often discarded by restaurants, events, hotels, and other organizations while nearby communities and NGOs may require food resources.
+
+FoodRescue AI aims to provide a structured digital platform through which surplus food can be registered, evaluated, requested, collected, and distributed before it expires.
 
 ---
 
 ## 🎯 Project Objectives
-- **Reduce Food Waste**: Accelerate food donation cycles before expiry.
-- **Ensure Food Safety**: Simulate AI analysis of food quality and predict freshness labels.
-- **Streamline Delivery**: Implement a structured workflow (Request -> Accepted -> Assigned -> Pickup -> Collected -> Received -> Distributed).
-- **Auditability**: Log all actions of donors, NGOs, and admins for accountability.
+
+- **Reduce Food Waste**  
+  Enable donors to quickly register and redistribute surplus food.
+
+- **Improve Food Safety**  
+  Provide image-based food analysis and freshness estimation.
+
+- **Streamline Donation Management**  
+  Manage the complete donation lifecycle through structured workflows.
+
+- **Improve Transparency**  
+  Maintain audit logs and status tracking throughout the process.
+
+- **Enable Real-Time Communication**  
+  Provide notifications and chat functionality between platform users.
 
 ---
 
 ## ✨ Key Features
-- **AI-Powered Freshness Analysis**: Mock computer-vision freshness and shelf-life prediction based on food categories and image uploads.
-- **Real-Time Notification Dispatch**: WebSockets send immediate updates to donors and NGOs when request statuses change.
-- **Comprehensive Workflow Tracking**: Interactive pipeline steps from donor creation to NGO distribution.
-- **Auditing & Logging**: Admin panel displays audit logs for all security, registration, and status updates.
-- **Interactive Chat**: Built-in chat system allowing messaging between active donors and rescue partner NGOs.
+
+### 🔐 Authentication & Security
+
+- User registration and login
+- JWT-based authentication
+- Spring Security integration
+- Role-based authorization
+- Protected REST APIs
+- Global exception handling
+
+### 🍱 Food Donation Management
+
+- Create food donations
+- Upload food images
+- Track donation status
+- Store food quantity and expiry information
+- View donation history
+- Manage donor-specific donations
+
+### 🤖 AI-Assisted Food Analysis
+
+- Upload food images
+- Analyze food freshness
+- Estimate food quantity
+- Generate freshness/confidence information
+- Provide food rescue recommendations
+
+> The current implementation uses an application-level analysis/simulation approach rather than a production computer-vision model.
+
+### 🤝 Donation Request Workflow
+
+The application supports a structured workflow:
+
+```text
+Request
+   ↓
+Accepted
+   ↓
+Assigned
+   ↓
+Pickup Started
+   ↓
+Collected
+   ↓
+Received
+   ↓
+Delivered
+```
+
+### 🔔 Notifications
+
+- Donation-related notifications
+- Request status updates
+- Real-time notification dispatch
+- WebSocket/STOMP communication
+
+### 💬 Real-Time Chat
+
+- Donor-to-NGO communication
+- WebSocket-based messaging
+- Room-based chat handling
+- Persistent chat messages
+
+### 📊 Administration
+
+- User management
+- Audit logs
+- Monitoring
+- Analytics
+- System settings
+- Platform activity tracking
 
 ---
 
 ## 👥 User Roles
-1. **Donor (Restaurant/Host)**: Can upload surplus food, analyze freshness using AI, discover NGOs, and send requests.
-2. **NGO (Rescue Partner)**: Receives requests, accepts/declines them, assigns delivery drivers, and marks food milestones.
-3. **Admin (Platform Operator)**: Manages user verification, views analytical reports, controls settings, and monitors audit logs.
+
+### Donor
+
+A donor can:
+
+- Register and authenticate
+- Add surplus food
+- Upload food images
+- Analyze food
+- View donations
+- Send donation requests
+- Track donation progress
+
+### NGO / Rescue Partner
+
+An NGO can:
+
+- View incoming donation requests
+- Accept or reject requests
+- Assign pickup personnel
+- Track collection
+- Confirm received food
+- Confirm distribution
+- Communicate with donors
+
+### Admin
+
+An administrator can:
+
+- Manage users
+- Monitor platform activity
+- Review audit logs
+- View analytics
+- Manage system settings
+- Monitor donation workflows
 
 ---
 
 ## 🔄 System Workflow
-```
-[Donor Uploads Food] ─> [AI Quality Check] ─> [Select NGO] ─> [Create Request]
-                                                                     │
-[Delivered/Distributed] <─ [Received] <─ [Collected] <─ [Pickup] <─ [Accept Request]
+
+```text
+┌──────────────────┐
+│  Donor Registers │
+└────────┬─────────┘
+         ↓
+┌──────────────────┐
+│ Upload Food Info │
+│   + Food Image   │
+└────────┬─────────┘
+         ↓
+┌──────────────────┐
+│  AI Food Analysis│
+└────────┬─────────┘
+         ↓
+┌──────────────────┐
+│ Select NGO /     │
+│ Create Request   │
+└────────┬─────────┘
+         ↓
+┌──────────────────┐
+│ NGO Accepts      │
+│ Request          │
+└────────┬─────────┘
+         ↓
+┌──────────────────┐
+│ Assign Pickup    │
+└────────┬─────────┘
+         ↓
+┌──────────────────┐
+│ Pickup / Collect │
+└────────┬─────────┘
+         ↓
+┌──────────────────┐
+│ Food Received    │
+└────────┬─────────┘
+         ↓
+┌──────────────────┐
+│ Food Distributed │
+└──────────────────┘
 ```
 
 ---
 
 ## 🛠️ Technology Stack
-- **Backend**: Java 21, Spring Boot 3.2.3, Spring Security, JPA Hibernate, Spring Actuator, MapStruct, Lombok.
-- **Database & Migrations**: MySQL 8.0, Flyway DB.
-- **Frontend**: HTML5, CSS3, JavaScript (Vanilla ES6), Bootstrap 5, WebSockets (STOMP).
-- **Testing & CI**: Spring Boot Test (MockMvc), JUnit 5, GitHub Actions.
-- **Deployment**: Docker, Docker Compose.
+
+### Backend
+
+- Java 21
+- Spring Boot 3.2.3
+- Spring MVC
+- Spring Security
+- JWT Authentication
+- Spring Data JPA
+- Hibernate
+- REST APIs
+- Spring Actuator
+- MapStruct
+- Lombok
+
+### Database
+
+- PostgreSQL
+- Flyway Database Migrations
+
+### Frontend
+
+- HTML5
+- CSS3
+- JavaScript ES6
+- Bootstrap
+- Thymeleaf
+
+### Real-Time Communication
+
+- WebSockets
+- STOMP
+
+### Testing
+
+- JUnit 5
+- Spring Boot Test
+- MockMvc
+- Integration Testing
+
+### Development & Deployment
+
+- Maven
+- Git
+- GitHub
+- GitHub Actions
+- Docker
+- Docker Compose
+- IntelliJ IDEA
+- Postman
 
 ---
 
 ## 🏛️ System Architecture
-```
-                ┌─────────────────────────┐
-                │         Browser         │
-                │ HTML5 / CSS3 / JS / BS5 │
-                └────────────┬────────────┘
-                             │ (REST APIs & WebSockets)
-                             ▼
-                ┌─────────────────────────┐
-                │       Spring Boot       │
-                │   (Spring MVC, Security)│
-                └────────────┬────────────┘
-                             │
-            ┌────────────────┴────────────────┐
-            ▼                                 ▼
-     ┌─────────────┐                   ┌─────────────┐
-     │    MySQL    │                   │ AI Freshness│
-     │  Database   │                   │ Simulator   │
-     └─────────────┘                   └─────────────┘
+
+```text
+                    ┌──────────────────────┐
+                    │       Browser        │
+                    │ HTML / CSS / JS      │
+                    │ Thymeleaf / Bootstrap│
+                    └──────────┬───────────┘
+                               │
+                    REST APIs / WebSockets
+                               │
+                               ▼
+                    ┌──────────────────────┐
+                    │     Spring Boot      │
+                    │                      │
+                    │ Controllers          │
+                    │ Services             │
+                    │ Security             │
+                    │ DTOs                 │
+                    │ Exception Handling   │
+                    └──────────┬───────────┘
+                               │
+                    ┌──────────┴───────────┐
+                    │                      │
+                    ▼                      ▼
+          ┌─────────────────┐    ┌──────────────────┐
+          │   PostgreSQL    │    │ Food Analysis    │
+          │    Database     │    │    Service       │
+          └─────────────────┘    └──────────────────┘
+                    │
+                    ▼
+          ┌─────────────────┐
+          │ Flyway Database │
+          │   Migrations    │
+          └─────────────────┘
 ```
 
 ---
 
 ## 📂 Project Structure
+
 ```text
-foodrescue/
-├── .github/workflows/      # GitHub Actions CI Configurations
+foodrescue-ai/
+│
+├── .github/
+│   └── workflows/
+│       └── build.yml
+│
 ├── src/
 │   ├── main/
 │   │   ├── java/com/foodrescue/
-│   │   │   ├── config/      # App configurations (Security, WebSocket, Swagger)
-│   │   │   ├── controller/  # REST Controllers
-│   │   │   ├── dto/         # Data Transfer Objects
-│   │   │   ├── entity/      # JPA Hibernate Entities
-│   │   │   ├── mapper/      # MapStruct DTO Mappers
-│   │   │   ├── repository/  # Spring Data JPA Repositories
-│   │   │   └── service/     # Core Business Logic Layer
-│   │   └── resources/
-│   │       ├── db/migration/# Flyway SQL Schema Migrations (V1 to V7)
-│   │       ├── static/      # Web Static Assets (CSS, JS, Images)
-│   │       ├── templates/   # Thymeleaf HTML Views
-│   │       └── application.properties
-│   └── test/                # JUnit Integration Test Suite
-├── Dockerfile               # Multi-Stage App Dockerfile
-├── docker-compose.yml       # Container Orchestration
-├── .dockerignore            # Docker Build Exclusions
-├── .gitignore               # Git Version Control Exclusions
-├── LICENSE                  # MIT License
-├── application-example.properties  # Configuration Properties Template
-└── .env.example             # Environment Variables Template
+│   │   │
+│   │   ├── config/
+│   │   │   ├── ApplicationConfig.java
+│   │   │   ├── SecurityConfig.java
+│   │   │   └── WebSocketConfig.java
+│   │   │
+│   │   ├── controller/
+│   │   ├── dto/
+│   │   ├── entity/
+│   │   ├── exception/
+│   │   ├── mapper/
+│   │   ├── repository/
+│   │   ├── scheduler/
+│   │   ├── security/
+│   │   ├── service/
+│   │   ├── util/
+│   │   └── websocket/
+│   │
+│   └── resources/
+│       ├── db/
+│       │   └── migration/
+│       ├── static/
+│       ├── templates/
+│       └── application.properties
+│
+├── src/test/
+│
+├── Dockerfile
+├── docker-compose.yml
+├── pom.xml
+├── application-example.properties
+├── .env.example
+├── .gitignore
+└── README.md
 ```
 
 ---
 
 ## 🗄️ Database Design & Migrations
-Database tables are managed automatically using **Flyway DB** migrations located in `src/main/resources/db/migration`:
-* **V1**: Creates core tables (`users`, `locations`, `food_donations`).
-* **V2**: Adds profile-specific structural columns.
-* **V3**: Seeds default coordinates for cities.
-* **V4**: Defines `donation_requests` for the rescue pipeline.
-* **V5**: Introduces constraints and statuses.
-* **V6**: Creates `audit_logs` and `chat_messages` tables.
-* **V7**: Introduces the `system_settings` table.
+
+Database schema changes are managed using **Flyway**.
+
+Migration files are located at:
+
+```text
+src/main/resources/db/migration/
+```
+
+Current migrations include:
+
+| Migration | Purpose |
+|---|---|
+| V1 | Initial database schema |
+| V2 | Additional food donation and notification fields |
+| V3 | Default location seed data |
+| V4 | Donation request workflow |
+| V5 | Food urgency and notes |
+| V6 | Audit logs and chat messages |
+| V7 | System settings |
+| V8 | User profile fields |
+
+Major database tables include:
+
+```text
+users
+locations
+food_donations
+food_analysis
+notifications
+donation_requests
+audit_logs
+chat_messages
+system_settings
+```
 
 ---
 
 ## 🔌 API Documentation
 
 ### Authentication APIs
-| HTTP Method | Endpoint | Purpose | Access | Request Body (JSON) | Response |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| `POST` | `/api/auth/register` | Register new Donor, NGO, Admin | Public | `RegisterRequest` | JWT token & user summary |
-| `POST` | `/api/auth/login` | Login and obtain JWT | Public | `AuthRequest` | JWT token & user summary |
-| `GET` | `/api/auth/me` | Get current logged-in profile | Authenticated | None | Current User JSON |
-| `POST` | `/api/auth/logout` | Client side sign-out | Authenticated | None | Success message |
+
+| Method | Endpoint | Purpose | Access |
+|---|---|---|---|
+| POST | `/api/auth/register` | Register user | Public |
+| POST | `/api/auth/login` | Login | Public |
+| GET | `/api/auth/me` | Current user profile | Authenticated |
+| POST | `/api/auth/logout` | Logout | Authenticated |
 
 ### Food Donation APIs
-| HTTP Method | Endpoint | Purpose | Access | Request / Parameters | Response |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| `POST` | `/api/food/upload` | Add donation with image | `DONOR` | `MultipartForm` (image, title, details) | Created `FoodDonation` |
-| `POST` | `/api/food` | Add donation (JSON only) | `DONOR` | `FoodDonationRequest` (JSON) | Created `FoodDonation` |
-| `GET` | `/api/food` | Retrieve all available food | `DONOR`, `NGO`, `ADMIN` | None | List of `FoodDonation` |
-| `GET` | `/api/food/{id}` | Retrieve donation details | `DONOR`, `NGO`, `ADMIN` | Path variable `id` | `FoodDonation` |
-| `GET` | `/api/food/donor` | Get current Donor's donations | `DONOR`, `ADMIN` | None | List of `DonationResponse` |
-| `GET` | `/api/food/ngo` | Get accepted NGO donations | `NGO`, `ADMIN` | None | List of `DonationResponse` |
-| `PATCH` | `/api/food/{id}/status` | Update general status | `DONOR`, `NGO`, `ADMIN` | `{"status": "..."}` | `DonationResponse` |
-| `DELETE` | `/api/food/{id}` | Delete a donation record | `DONOR`, `ADMIN` | Path variable `id` | HTTP 204 No Content |
 
-### Donation Request Workflow APIs
-| HTTP Method | Endpoint | Purpose | Access | Request Body |
-| :--- | :--- | :--- | :--- | :--- |
-| `POST` | `/api/requests` | Send donation request to NGO | `DONOR` | `{"donationId": 1, "ngoId": 2}` |
-| `GET` | `/api/requests/donor` | Get all outgoing donor requests | `DONOR`, `ADMIN` | None |
-| `GET` | `/api/requests/ngo` | Get incoming NGO requests | `NGO`, `ADMIN` | None |
-| `PATCH` | `/api/requests/{id}/accept` | Accept a pending request | `NGO`, `ADMIN` | None |
-| `PATCH` | `/api/requests/{id}/reject` | Reject a pending request | `NGO`, `ADMIN` | `{"reason": "..."}` |
-| `PATCH` | `/api/requests/{id}/assign` | Assign driver to route | `NGO`, `ADMIN` | `{"assignedToName": "...", "assignedToPhone": "..."}` |
-| `PATCH` | `/api/requests/{id}/pickup-start` | Mark route as started | `NGO`, `ADMIN` | None |
-| `PATCH` | `/api/requests/{id}/collect` | Confirm food collected | `NGO`, `ADMIN` | None |
-| `PATCH` | `/api/requests/{id}/receive` | Confirm food received | `NGO`, `ADMIN` | `{"receivedQuantityKg": 15.5, "notes": "..."}` |
-| `PATCH` | `/api/requests/{id}/deliver` | Confirm food distributed | `NGO`, `ADMIN` | `{"notes": "..."}` |
-| `PATCH` | `/api/requests/{id}/cancel` | Cancel active request | Authenticated | None |
+| Method | Endpoint | Purpose | Access |
+|---|---|---|---|
+| POST | `/api/food/upload` | Create donation with image | DONOR |
+| POST | `/api/food` | Create donation | DONOR |
+| GET | `/api/food` | Get available food | DONOR / NGO / ADMIN |
+| GET | `/api/food/{id}` | Get donation details | DONOR / NGO / ADMIN |
+| GET | `/api/food/donor` | Get donor donations | DONOR / ADMIN |
+| GET | `/api/food/ngo` | Get NGO donations | NGO / ADMIN |
+| PATCH | `/api/food/{id}/status` | Update donation status | DONOR / NGO / ADMIN |
+| DELETE | `/api/food/{id}` | Delete donation | DONOR / ADMIN |
 
-### AI Analysis APIs
-| HTTP Method | Endpoint | Purpose | Access | Request / Parameters |
-| :--- | :--- | :--- | :--- | :--- |
-| `POST` | `/api/ai/analyze` | Scan uploaded image for freshness | `DONOR`, `NGO`, `ADMIN` | `MultipartForm` (image file, category) |
+### Donation Request APIs
+
+| Method | Endpoint | Purpose |
+|---|---|---|
+| POST | `/api/requests` | Create donation request |
+| GET | `/api/requests/donor` | View donor requests |
+| GET | `/api/requests/ngo` | View NGO requests |
+| PATCH | `/api/requests/{id}/accept` | Accept request |
+| PATCH | `/api/requests/{id}/reject` | Reject request |
+| PATCH | `/api/requests/{id}/assign` | Assign pickup personnel |
+| PATCH | `/api/requests/{id}/pickup-start` | Start pickup |
+| PATCH | `/api/requests/{id}/collect` | Mark food collected |
+| PATCH | `/api/requests/{id}/receive` | Mark food received |
+| PATCH | `/api/requests/{id}/deliver` | Mark food delivered |
+| PATCH | `/api/requests/{id}/cancel` | Cancel request |
+
+### AI Analysis API
+
+```text
+POST /api/ai/analyze
+```
+
+Accepts a food image and category for food analysis.
 
 ---
 
 ## 🔒 Environment Configuration
 
-Sensitive secrets are abstracted to environment variables. Set the following keys in your system environment or a `.env` file at the project root:
+Sensitive configuration values are loaded through environment variables.
 
-| Key | Description | Default Value |
-| :--- | :--- | :--- |
-| `PORT` | Local runtime application port | `8080` |
-| `DB_URL` | JDBC database connection URL | `jdbc:mysql://mysql:3306/foodrescue?useSSL=false` |
-| `DB_USERNAME` | Production MySQL Username | `foodrescue_user` |
-| `DB_PASSWORD` | Production MySQL Password | `[Required]` |
-| `JWT_SECRET` | 256-bit Secure Signing Key | `[Required]` |
-| `UPLOAD_DIR` | Directory path where uploads reside | `./uploads` |
+The application supports:
+
+```properties
+PORT
+DB_URL
+DB_USERNAME
+DB_PASSWORD
+JWT_SECRET
+```
+
+Example configuration:
+
+```properties
+server.port=${PORT:8080}
+
+spring.datasource.url=${DB_URL:jdbc:postgresql://localhost:5432/foodrescue}
+spring.datasource.username=${DB_USERNAME:postgres}
+spring.datasource.password=${DB_PASSWORD}
+
+jwt.secret=${JWT_SECRET}
+```
+
+### Example Environment Variables
+
+```text
+DB_URL=jdbc:postgresql://localhost:5432/foodrescue
+DB_USERNAME=postgres
+DB_PASSWORD=your_postgresql_password
+JWT_SECRET=your_secure_jwt_secret
+```
+
+**Do not commit real passwords, API keys, or JWT secrets to GitHub.**
 
 ---
 
 ## 💻 Local Development Setup
 
 ### Prerequisites
-- JDK 21 installed.
-- Maven 3.9+ installed.
-- MySQL 8.0 server active locally.
 
-### Step 1: Prepare Database
-Log into MySQL and execute:
+Install:
+
+- JDK 21
+- PostgreSQL
+- Maven 3.9+
+- Git
+- IntelliJ IDEA or another Java IDE
+
+### Step 1: Create PostgreSQL Database
+
+Create the application database:
+
 ```sql
 CREATE DATABASE foodrescue;
+```
+
+For testing:
+
+```sql
 CREATE DATABASE foodrescue_test;
 ```
 
-### Step 2: Configure Properties
-Copy `application-example.properties` to `src/main/resources/application.properties` and replace credentials:
-```properties
-spring.datasource.username=root
-spring.datasource.password=your_local_password
-jwt.secret=404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+### Step 2: Configure Environment Variables
+
+Set the required variables:
+
+```text
+DB_URL=jdbc:postgresql://localhost:5432/foodrescue
+DB_USERNAME=postgres
+DB_PASSWORD=your_password
+JWT_SECRET=your_secure_secret
 ```
 
-### Step 3: Compile and Package
+Alternatively, configure them through your IDE's Run Configuration.
+
+### Step 3: Build the Project
+
+Using Maven Wrapper:
+
 ```bash
-mvn clean install
+./mvnw clean install
 ```
 
-### Step 4: Run Application
-```bash
-mvn spring-boot:run
+On Windows:
+
+```powershell
+.\mvnw.cmd clean install
 ```
-The application will launch on [http://localhost:8080](http://localhost:8080).
+
+### Step 4: Run the Application
+
+```powershell
+.\mvnw.cmd spring-boot:run
+```
+
+Or run `FoodrescueApplication` directly from IntelliJ IDEA.
+
+### Step 5: Open the Application
+
+```text
+http://localhost:8080
+```
+
+Flyway automatically applies the database migrations when the application starts.
 
 ---
 
-## 🐳 Docker Deployment Setup
+## 🐳 Docker Deployment
 
-Deploy the entire stack (Spring Boot Application + MySQL Database) using Docker Compose.
+The project includes Docker-related configuration for containerized deployment.
 
-### Step 1: Copy Environment Template
-```bash
-cp .env.example .env
-```
-Open `.env` and fill in custom database passwords and JWT secrets.
+### Build the Application Image
 
-### Step 2: Build Containers
 ```bash
 docker compose build
 ```
 
-### Step 3: Start Services
-Launch the application and database containers in detached mode:
+### Start Containers
+
 ```bash
 docker compose up -d
 ```
 
-### Step 4: Verify Services Status
+### Check Running Containers
+
 ```bash
 docker compose ps
 ```
 
-To inspect application startup log streams:
+### View Application Logs
+
 ```bash
 docker compose logs -f app
 ```
 
-To shut down services:
+### Stop Containers
+
 ```bash
 docker compose down
 ```
+
+> For PostgreSQL deployment, ensure the Docker Compose database configuration uses PostgreSQL and that the application's `DB_URL`, username, and password match the PostgreSQL service.
 
 ---
 
 ## 🧪 Testing
 
-### Running Unit & Integration Tests
-Integration tests run against an isolated test database. Make sure you set your local MySQL passwords or define environment variables before running:
-```bash
-mvn clean test
+The project contains unit and integration tests under:
+
+```text
+src/test/
 ```
 
-### CI/CD Pipeline
-Every pull request and push to the `main` or `master` branches triggers the **GitHub Actions** CI workflow to:
-1. Initialize a MySQL service container.
-2. Verify all JUnit tests pass.
-3. Validate compilation and build package.
-4. Verify the Dockerfile builds successfully.
+Run the test suite with:
+
+```powershell
+.\mvnw.cmd clean test
+```
+
+The project also includes a GitHub Actions workflow for automated build verification.
 
 ---
 
-## 🚀 Future Enhancements
-- **True AI Computer Vision Model Integration**: Connect actual TensorFlow/PyTorch object detection endpoints for food analysis.
-- **Dynamic Google Maps Routing**: Fetch traffic details and calculate optimal driver paths.
-- **Multilingual Support**: Internationalization (i18n) for local community usability.
+## 🔄 MySQL to PostgreSQL Migration
+
+The original application used **MySQL**. This version of the project has been migrated to **PostgreSQL**.
+
+### Migration Work
+
+The migration involved:
+
+- Replacing the MySQL JDBC driver with the PostgreSQL driver
+- Updating Spring datasource configuration
+- Updating Hibernate database configuration
+- Converting MySQL-specific SQL syntax to PostgreSQL-compatible SQL
+- Updating Flyway migration scripts
+- Converting MySQL `AUTO_INCREMENT` behavior to PostgreSQL `BIGSERIAL`
+- Converting MySQL boolean fields to PostgreSQL-compatible `BOOLEAN`
+- Updating timestamp and constraint definitions
+- Verifying foreign keys and indexes
+- Creating PostgreSQL-compatible seed data
+- Testing database initialization through Flyway
+- Verifying application startup and JPA integration
+
+### PostgreSQL Stack
+
+```text
+Java 21
+   │
+Spring Boot
+   │
+Spring Data JPA / Hibernate
+   │
+PostgreSQL
+   │
+Flyway
+```
+
+The PostgreSQL database is now the primary database configuration for this repository.
+
+---
+
+## 👨‍💻 My Contribution
+
+This project was developed as a **team project**.
+
+My primary contribution was the **MySQL-to-PostgreSQL migration and database integration**.
+
+### Responsibilities
+
+- Migrated the application from MySQL to PostgreSQL
+- Updated Maven database dependencies
+- Updated Spring Boot datasource configuration
+- Converted Flyway SQL migrations
+- Resolved PostgreSQL compatibility issues
+- Configured Hibernate/JPA for PostgreSQL
+- Verified database schema creation
+- Tested application startup with PostgreSQL
+- Tested authentication and registration
+- Tested food donation creation and persistence
+- Tested image upload and food analysis
+- Verified the application locally after migration
+
+I also worked with and understood the application's existing Spring Boot modules, including authentication, donation management, security, notifications, and the donation request workflow.
+
+---
+
+## 📈 Future Enhancements
+
+- Integrate a production-grade computer vision model for food freshness analysis
+- Improve food expiry prediction
+- Integrate real-time Google Maps routing
+- Add optimized pickup route calculation
+- Add multilingual support
+- Improve NGO verification workflows
+- Add cloud-based image storage
+- Add production monitoring and observability
+- Improve automated test coverage
 
 ---
 
 ## 📄 License
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+This project is licensed under the MIT License.
+
+See the [LICENSE](LICENSE) file for details.
 
 ---
 
 ## ✍️ Author
-Designed & Developed by a Java Full Stack Developer.
+
+**Sha Sopnil Jain**
+
+Java Full Stack Developer
+
+### Technologies
+
+```text
+Java
+Spring Boot
+Spring Security
+REST APIs
+JPA / Hibernate
+PostgreSQL
+React / JavaScript
+Docker
+Git
+```
+
+---
+
+⭐ If you find this project useful, consider giving the repository a star.
