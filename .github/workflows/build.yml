@@ -1,0 +1,45 @@
+name: FoodRescue AI Build & Test CI
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    # Spin up MySQL service container for integration tests
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_DATABASE: foodrescue_test
+          MYSQL_ROOT_PASSWORD: root_password_test_123
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+
+    steps:
+    - name: Checkout Source Code
+      uses: actions/checkout@v4
+
+    - name: Set up Java 21
+      uses: actions/setup-java@v4
+      with:
+        java-version: '21'
+        distribution: 'temurin'
+        cache: 'maven'
+
+    - name: Build & Run Tests with Maven
+      run: mvn clean package
+      env:
+        # Override connection settings for the CI environment
+        TEST_DB_URL: jdbc:mysql://127.0.0.1:3306/foodrescue_test?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true&createDatabaseIfNotExist=true
+        TEST_DB_USERNAME: root
+        TEST_DB_PASSWORD: root_password_test_123
+        TEST_JWT_SECRET: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+
+    - name: Verify Docker Image Build
+      run: docker build -t foodrescue-ai:latest .

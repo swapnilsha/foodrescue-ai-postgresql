@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/common :: head('System Audit Logs')}"></head>
+<body>
+
+    <div class="app-wrapper">
+        <aside th:replace="~{fragments/sidebar :: sidebar('audit', 'ADMIN')}"></aside>
+
+        <div class="main-container">
+            <nav th:replace="~{fragments/navbar :: navbar}"></nav>
+
+            <main class="content-body">
+                <div class="mb-5 d-flex justify-content-between align-items-center" data-aos="fade-down">
+                    <div>
+                        <h2 class="fw-bold mb-1">System Audit & Compliance</h2>
+                        <p class="text-muted">Immutable ledger of platform actions, security events, and user behavior.</p>
+                    </div>
+                </div>
+
+                <div class="card-enterprise shadow-sm" data-aos="fade-up">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="bg-light">
+                                <tr class="extra-small uppercase ls-1 text-muted">
+                                    <th class="border-0 px-4">Event ID</th>
+                                    <th class="border-0">Timestamp</th>
+                                    <th class="border-0">Actor</th>
+                                    <th class="border-0">Action</th>
+                                    <th class="border-0">Severity</th>
+                                    <th class="border-0 text-end px-4">Trace</th>
+                                </tr>
+                            </thead>
+                            <tbody id="audit-log-body">
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted py-4 small">Loading system audit trail logs...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <nav th:replace="~{fragments/common :: scripts}"></nav>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            loadAuditLogs();
+        });
+
+        async function loadAuditLogs() {
+            if (!window.api) return;
+            try {
+                const logs = await window.api.get('/admin/audits');
+                const tbody = document.getElementById('audit-log-body');
+                if (tbody && logs && logs.length > 0) {
+                    tbody.innerHTML = logs.map(log => {
+                        const date = new Date(log.createdAt);
+                        const displayDate = date.toLocaleString();
+                        const badgeColor = log.severity === 'SEVERE' ? 'danger' : (log.severity === 'WARNING' ? 'warning' : 'info');
+
+                        return `
+                            <tr>
+                                <td class="px-4 fw-bold">#LOG-${log.id}</td>
+                                <td class="small">${displayDate}</td>
+                                <td><div class="small fw-bold">${log.actor}</div></td>
+                                <td><span class="small text-dark fw-bold">${log.action}</span></td>
+                                <td><span class="badge bg-${badgeColor} bg-opacity-10 text-${badgeColor}">${log.severity}</span></td>
+                                <td class="text-end px-4">
+                                    <button class="btn btn-light btn-sm" onclick="alert('${log.description ? log.description.replace(/'/g, "\\'") : ''}')"><i class="fa-solid fa-code"></i></button>
+                                </td>
+                            </tr>
+                        `;
+                    }).join('');
+                } else if (tbody) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4 small">No system logs recorded yet.</td></tr>';
+                }
+            } catch (err) {
+                console.error("Failed to load audit logs:", err);
+                const tbody = document.getElementById('audit-log-body');
+                if (tbody) {
+                    tbody.innerHTML = `<tr><td colspan="6" class="text-center text-danger py-4 small">Unable to load audit logs: ${err.message}</td></tr>`;
+                }
+            }
+        }
+    </script>
+    <style>
+        .ls-1 { letter-spacing: 0.1em; }
+        .uppercase { text-transform: uppercase; }
+        .extra-small { font-size: 0.65rem; }
+    </style>
+</body>
+</html>

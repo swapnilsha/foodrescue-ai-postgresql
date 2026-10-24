@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/common :: head('Impact Leaderboard')}"></head>
+<body>
+
+    <div class="app-wrapper">
+        <aside th:replace="~{fragments/sidebar :: sidebar('impact', 'DONOR')}"></aside>
+
+        <div class="main-container">
+            <nav th:replace="~{fragments/navbar :: navbar}"></nav>
+
+            <main class="content-body">
+                <div class="mb-5 text-center" data-aos="fade-down">
+                    <div class="bg-warning bg-opacity-10 text-warning d-inline-flex p-3 rounded-circle mb-3">
+                        <i class="fa-solid fa-trophy fs-2"></i>
+                    </div>
+                    <h2 class="fw-bold mb-1">Impact Scoreboard</h2>
+                    <p class="text-muted">Celebrating the champions of zero waste.</p>
+                </div>
+
+                <div class="row g-4 justify-content-center">
+                    <!-- Your Rank Card -->
+                    <div class="col-lg-10" data-aos="zoom-in">
+                        <div class="card-enterprise bg-primary text-white border-0 shadow-lg p-5" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;">
+                            <div class="row align-items-center">
+                                <div class="col-md-6 border-end border-white border-opacity-10 py-3">
+                                    <div class="d-flex align-items-center gap-4">
+                                        <img id="current-avatar" src="https://ui-avatars.com/api/?name=User&background=fff&color=10b981" class="rounded-pill border border-4 border-white border-opacity-20" width="80">
+                                        <div>
+                                            <h3 class="fw-bold mb-1" id="current-name">Loading...</h3>
+                                            <div class="badge bg-white text-success px-3 py-2 rounded-pill fw-bold" id="current-level">LEVEL 1 DONOR</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 py-3 px-lg-5">
+                                    <div class="row text-center g-3">
+                                        <div class="col-4">
+                                            <h2 class="fw-bold mb-0" id="current-rank">—</h2>
+                                            <p class="small opacity-75 mb-0">Global Rank</p>
+                                        </div>
+                                        <div class="col-4 border-start border-end border-white border-opacity-10">
+                                            <h2 class="fw-bold mb-0" id="current-points">0</h2>
+                                            <p class="small opacity-75 mb-0">Impact Pts</p>
+                                        </div>
+                                        <div class="col-4">
+                                            <h2 class="fw-bold mb-0" id="current-rating">5/5</h2>
+                                            <p class="small opacity-75 mb-0">Rating</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Global Leaderboard -->
+                    <div class="col-lg-10" data-aos="fade-up">
+                        <div class="card-enterprise">
+                            <h5 class="fw-bold mb-4">Global Impact Champions (June 2026)</h5>
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle">
+                                    <thead>
+                                        <tr class="text-muted small uppercase">
+                                            <th class="border-0">Rank</th>
+                                            <th class="border-0">Organization</th>
+                                            <th class="border-0">Meals Rescued</th>
+                                            <th class="border-0">CO2 Offset</th>
+                                            <th class="border-0 text-end">Social ROI</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="leaderboard-body">
+                                        <tr>
+                                            <td colspan="5" class="text-center text-muted py-4 small">Loading leaderboard data...</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Badges / Achievements -->
+                    <div class="col-lg-10" data-aos="fade-up">
+                        <div class="card-enterprise">
+                            <h5 class="fw-bold mb-4">Earned Achievements</h5>
+                            <div class="row g-4 text-center" id="achievements-container">
+                                <!-- Rendered dynamically -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <nav th:replace="~{fragments/common :: scripts}"></nav>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            loadImpactLeaderboard();
+        });
+
+        async function loadImpactLeaderboard() {
+            if (!window.api) return;
+            try {
+                const data = await window.api.get('/donor/impact');
+                if (!data) return;
+
+                // Update card details
+                document.getElementById('current-name').textContent = data.currentName || 'User';
+                document.getElementById('current-avatar').src = `https://ui-avatars.com/api/?name=${encodeURIComponent(data.currentName)}&background=fff&color=10b981`;
+                document.getElementById('current-rank').textContent = data.currentRank || 'N/A';
+                document.getElementById('current-points').textContent = data.currentPoints || 0;
+
+                const pts = data.currentPoints || 0;
+                let lvl = 'LEVEL 1 DONOR';
+                if (pts > 500) lvl = 'LEVEL 4 DONOR';
+                else if (pts > 200) lvl = 'LEVEL 3 DONOR';
+                else if (pts > 100) lvl = 'LEVEL 2 DONOR';
+                document.getElementById('current-level').textContent = lvl;
+
+                // Update Achievements dynamically
+                const achContainer = document.getElementById('achievements-container');
+                if (achContainer) {
+                    const achievements = [];
+                    if (pts > 0) {
+                        achievements.push({
+                            title: 'First Step',
+                            desc: 'Unlocked for your first surplus food rescue donation.',
+                            icon: 'fa-medal text-warning'
+                        });
+                    }
+                    if (pts >= 100) {
+                        achievements.push({
+                            title: 'Century Club',
+                            desc: 'Unlocked for rescuing over 100kg of food surplus.',
+                            icon: 'fa-certificate text-primary'
+                        });
+                    }
+                    if (pts >= 500) {
+                        achievements.push({
+                            title: 'Zero Waste Champ',
+                            desc: 'Unlocked for rescuing over 500kg of food surplus.',
+                            icon: 'fa-trophy text-success'
+                        });
+                    }
+                    if (data.currentRank === '1st' || data.currentRank === 1 || String(data.currentRank).startsWith('1')) {
+                        achievements.push({
+                            title: 'Global Leader',
+                            desc: 'Ranked #1 on the global impact scoreboard.',
+                            icon: 'fa-crown text-warning'
+                        });
+                    }
+
+                    if (achievements.length > 0) {
+                        achContainer.innerHTML = achievements.map(ach => `
+                            <div class="col-md-3">
+                                <div class="p-4 border rounded-4 border-custom bg-light transition-hover h-100 animate-up">
+                                    <div class="bg-white shadow-sm p-3 rounded-circle d-inline-flex mb-3">
+                                        <i class="fa-solid ${ach.icon} fs-2"></i>
+                                    </div>
+                                    <h6 class="fw-bold mb-1">${ach.title}</h6>
+                                    <p class="small text-muted mb-0">${ach.desc}</p>
+                                </div>
+                            </div>
+                        `).join('');
+                    } else {
+                        achContainer.innerHTML = '<div class="col-12 text-center py-4 text-muted small">No achievements unlocked yet. Submit your first donation to earn medals!</div>';
+                    }
+                }
+
+                // Render leaderboard table
+                const tbody = document.getElementById('leaderboard-body');
+                if (tbody && data.leaderboard && data.leaderboard.length > 0) {
+                    tbody.innerHTML = data.leaderboard.map(row => {
+                        const highlightClass = row.isCurrent ? 'border-top border-bottom border-primary border-3 bg-light' : '';
+                        const rankHtml = row.rank === 1
+                            ? `<i class="fa-solid fa-crown text-warning me-2"></i> 1`
+                            : row.rank;
+                        const rowClass = row.rank === 1 ? 'bg-warning bg-opacity-10' : '';
+
+                        return `
+                            <tr class="${highlightClass || rowClass}">
+                                <td class="fw-bold ${row.rank > 1 ? 'text-muted ps-4' : ''}">${rankHtml}</td>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(row.name)}&background=1e293b&color=fff" class="rounded-circle" width="32">
+                                        <span class="fw-bold text-dark">${row.name} ${row.isCurrent ? '(You)' : ''}</span>
+                                    </div>
+                                </td>
+                                <td><span class="fw-bold">${row.mealsSaved}</span></td>
+                                <td><span class="text-success small fw-bold">${row.co2Offset} kg</span></td>
+                                <td class="text-end fw-bold text-primary">$${(row.socialRoi / 1000).toFixed(1)}k</td>
+                            </tr>
+                        `;
+                    }).join('');
+                } else if (tbody) {
+                    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4 small">No active donors yet. Be the first!</td></tr>';
+                }
+
+            } catch (err) {
+                console.error("Failed to load impact stats:", err);
+                const tbody = document.getElementById('leaderboard-body');
+                if (tbody) tbody.innerHTML = `<tr><td colspan="5" class="text-center text-danger py-4 small">Unable to load impact data: ${err.message}</td></tr>`;
+            }
+        }
+    </script>
+    <style>
+        .uppercase { text-transform: uppercase; }
+        .transition-hover:hover { transform: translateY(-5px); border-color: var(--primary) !important; box-shadow: var(--shadow-md); }
+    </style>
+</body>
+</html>

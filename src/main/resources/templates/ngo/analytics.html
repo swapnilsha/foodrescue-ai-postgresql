@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/common :: head('NGO Analytics')}"></head>
+<body>
+
+    <div class="app-wrapper">
+        <aside th:replace="~{fragments/sidebar :: sidebar('analytics', 'NGO')}"></aside>
+
+        <div class="main-container">
+            <nav th:replace="~{fragments/navbar :: navbar}"></nav>
+
+            <main class="content-body">
+                <div id="analytics-error-message" style="display:none;" class="mb-4"></div>
+                <div class="mb-5 d-flex justify-content-between align-items-end" data-aos="fade-down">
+                    <div>
+                        <h2 class="fw-bold mb-1">NGO Performance Intelligence</h2>
+                        <p class="text-muted mb-0">Monitor your rescue metrics, response times, and social impact.</p>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-outline-dark" id="ngo-export-report-btn" onclick="exportNGOReport()" aria-label="Export NGO analytics report">
+                            <i class="fa-solid fa-file-arrow-down me-2" aria-hidden="true"></i>Export Report
+                        </button>
+                    </div>
+                </div>
+
+                <div class="row g-4">
+                    <!-- Collection Volumes -->
+                    <div class="col-lg-8" data-aos="fade-up">
+                        <div class="card-enterprise h-100">
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                <h5 class="fw-bold mb-0">Monthly Collection Trends (kg)</h5>
+                                <div class="badge bg-light text-dark border p-2">June 2026: +12% vs May</div>
+                            </div>
+                            <div class="chart-container" style="height: 320px;">
+                                <canvas id="ngoVolChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Pickup Reliability -->
+                    <div class="col-lg-4" data-aos="fade-up" data-aos-delay="100">
+                        <div class="card-enterprise h-100">
+                            <h5 class="fw-bold mb-4">Response Reliability</h5>
+                            <div class="text-center py-4 mb-4 border-bottom">
+                                <div class="position-relative d-inline-block">
+                                    <canvas id="ngoRespChart" width="180" height="180"></canvas>
+                                    <div class="position-absolute top-50 start-50 translate-middle">
+                                        <h2 class="fw-bold mb-0 text-primary" id="ngo-success-rate">99%</h2>
+                                        <p class="small text-muted mb-0">Success</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="small text-muted p-2 bg-light rounded-4 text-center">
+                                Out of <span id="ngo-missions-total">158</span> missions attempted, <span class="text-dark fw-bold" id="ngo-missions-success">156 were successful</span>.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Efficiency Metrics -->
+                    <div class="col-md-6 col-xl-3" th:each="m : ${#numbers.sequence(1, 4)}" data-aos="fade-up" th:data-aos-delay="${m * 50}">
+                        <div class="card-enterprise text-center p-4 h-100">
+                            <div class="text-muted small uppercase fw-bold mb-2 ls-1" th:text="${m==1} ? 'Avg Arrival Time' : (${m==2} ? 'Fuel Efficiency' : (${m==3} ? 'Charity Reach' : 'Peak Performance'))">Metric</div>
+                            <h2 class="fw-bold mb-0" th:text="${m==1} ? '14.2m' : (${m==2} ? '18 mpg' : (${m==3} ? '12 Nodes' : '92%'))">Value</h2>
+                            <p class="small text-success fw-bold mb-0 mt-1"><i class="fa-solid fa-arrow-up me-1"></i> Improved</p>
+                        </div>
+                    </div>
+
+                    <!-- Charity Redistribution Chart (Donut) -->
+                    <div class="col-lg-6" data-aos="fade-up">
+                        <div class="card-enterprise">
+                            <h5 class="fw-bold mb-4">Redistribution Distribution</h5>
+                            <div class="chart-container" style="height: 280px;">
+                                <canvas id="redistChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- NGO Impact Portfolio -->
+                    <div class="col-lg-6" data-aos="fade-up" data-aos-delay="100">
+                        <div class="card-enterprise">
+                            <h5 class="fw-bold mb-4">Beneficiary Reach</h5>
+                            <div class="d-flex flex-column gap-3">
+                                <div class="p-3 bg-light rounded-4 d-flex justify-content-between align-items-center">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <div class="bg-primary text-white p-2 rounded-circle shadow-sm"><i class="fa-solid fa-house-chimney small"></i></div>
+                                        <span class="fw-bold small">Homeless Shelters</span>
+                                    </div>
+                                    <span class="badge bg-white text-dark border">45.2%</span>
+                                </div>
+                                <div class="p-3 bg-light rounded-4 d-flex justify-content-between align-items-center">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <div class="bg-success text-white p-2 rounded-circle shadow-sm"><i class="fa-solid fa-utensils small"></i></div>
+                                        <span class="fw-bold small">Community Soup Kitchens</span>
+                                    </div>
+                                    <span class="badge bg-white text-dark border">32.8%</span>
+                                </div>
+                                <div class="p-3 bg-light rounded-4 d-flex justify-content-between align-items-center">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <div class="bg-warning text-white p-2 rounded-circle shadow-sm"><i class="fa-solid fa-school small"></i></div>
+                                        <span class="fw-bold small">School Meal Programs</span>
+                                    </div>
+                                    <span class="badge bg-white text-dark border">22.0%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <nav th:replace="~{fragments/common :: scripts}"></nav>
+    <script>
+        let volChart = null;
+        let respChart = null;
+        let redistChart = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadAnalyticsData();
+        });
+
+        async function loadAnalyticsData() {
+            const errorContainer = document.getElementById('analytics-error-message');
+            if (errorContainer) errorContainer.style.display = 'none';
+
+            if (!window.api) return;
+
+            try {
+                const data = await window.api.get('/ngo/analytics/stats');
+                if (!data) throw new Error("No data returned from platform.");
+
+                // Set counters
+                const successRate = data.successRate || 0;
+                document.getElementById('ngo-success-rate').textContent = successRate + '%';
+                
+                const totalMissions = data.requestsReceived || 0;
+                document.getElementById('ngo-missions-total').textContent = totalMissions;
+                
+                const successfulMissions = (data.foodCollected || 0) + (data.foodReceived || 0) + (data.foodDelivered || 0);
+                document.getElementById('ngo-missions-success').textContent = successfulMissions + ' were successful';
+
+                // NGO Volume Chart (trends)
+                const volCtx = document.getElementById('ngoVolChart').getContext('2d');
+                if (volChart) volChart.destroy();
+
+                const volLabels = data.trends?.labels || [];
+                const volValues = data.trends?.values || [];
+
+                volChart = new Chart(volCtx, {
+                    type: 'line',
+                    data: {
+                        labels: volLabels.length > 0 ? volLabels : ['No Data'],
+                        datasets: [{
+                            label: 'Rescued (kg)',
+                            data: volValues.length > 0 ? volValues : [0],
+                            borderColor: '#3b82f6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            tension: 0.4,
+                            fill: true,
+                            borderWidth: 3
+                        }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+                });
+
+                // Response Reliability Chart
+                const respCtx = document.getElementById('ngoRespChart').getContext('2d');
+                if (respChart) respChart.destroy();
+
+                respChart = new Chart(respCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Success', 'Pending/Other'],
+                        datasets: [{
+                            data: [successRate, 100 - successRate],
+                            backgroundColor: ['#3b82f6', '#f1f5f9'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: { cutout: '85%', plugins: { legend: { display: false } } }
+                });
+
+                // Redistribution Chart (categoryDistribution)
+                const redistCtx = document.getElementById('redistChart').getContext('2d');
+                if (redistChart) redistChart.destroy();
+
+                const catLabels = Object.keys(data.categoryDistribution || {});
+                const catValues = Object.values(data.categoryDistribution || {});
+
+                redistChart = new Chart(redistCtx, {
+                    type: 'pie',
+                    data: {
+                        labels: catLabels.length > 0 ? catLabels.map(l => l.charAt(0).toUpperCase() + l.slice(1)) : ['No Data'],
+                        datasets: [{
+                            data: catValues.length > 0 ? catValues : [0],
+                            backgroundColor: ['#10b981', '#3b82f6', '#f59e0b', '#8b5cf6'],
+                            borderWidth: 2,
+                            borderColor: '#fff'
+                        }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false }
+                });
+
+            } catch (err) {
+                console.error("Failed to load NGO analytics:", err);
+                if (errorContainer) {
+                    errorContainer.style.display = 'block';
+                    errorContainer.innerHTML = `
+                        <div class="alert alert-danger d-flex align-items-center justify-content-between rounded-4 py-3 px-4 shadow-sm mb-4">
+                            <span><i class="fa-solid fa-triangle-exclamation me-2"></i>Unable to load live analytics: ${err.message || 'Network issue'}</span>
+                            <button class="btn btn-sm btn-danger px-3 py-1 rounded-pill" onclick="loadAnalyticsData()">Retry</button>
+                        </div>
+                    `;
+                }
+            }
+        }
+
+        function exportNGOReport() {
+            if (window.reportGenerator) {
+                window.reportGenerator.exportToCSV([{ scope: 'ngo' }], 'ngo_analytics');
+                if (window.showToast) window.showToast('Generating NGO analytics report…', 'info');
+            } else {
+                if (window.showToast) window.showToast('Report generator unavailable.', 'danger');
+            }
+        }
+    </script>
+</body>
+</html>

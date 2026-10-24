@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/common :: head('Nearby Donations')}"></head>
+<body>
+
+    <div class="app-wrapper">
+        <aside th:replace="~{fragments/sidebar :: sidebar('nearby', 'NGO')}"></aside>
+
+        <div class="main-container">
+            <nav th:replace="~{fragments/navbar :: navbar}"></nav>
+
+            <main class="content-body">
+                <div class="d-flex justify-content-between align-items-end mb-5" data-aos="fade-down">
+                    <div>
+                        <h2 class="fw-bold mb-1">Nearby Rescue Opportunities</h2>
+                        <p class="text-muted mb-0">Browse through available food donations within your region.</p>
+                    </div>
+                    <div class="btn-group border rounded-pill overflow-hidden bg-white shadow-sm p-1">
+                        <button class="btn btn-dark rounded-pill px-4 btn-sm">Card View</button>
+                        <button class="btn btn-white rounded-pill px-4 btn-sm" onclick="location.href='/ngo/map'">Map View</button>
+                    </div>
+                </div>
+
+                <!-- Filters -->
+                <div class="row g-3 mb-5" data-aos="fade-up">
+                    <div class="col-md-3">
+                        <select class="form-select bg-white border-0 shadow-sm py-2">
+                            <option>Radius: 5 km</option>
+                            <option>Radius: 10 km</option>
+                            <option>Radius: 50 km</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-select bg-white border-0 shadow-sm py-2">
+                            <option>Freshness: Any</option>
+                            <option>High (90%+)</option>
+                            <option>Medium (70%+)</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-select bg-white border-0 shadow-sm py-2">
+                            <option>Category: All</option>
+                            <option>Cooked Food</option>
+                            <option>Bakery</option>
+                            <option>Produce</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <input type="text" class="form-control bg-white border-0 shadow-sm py-2" placeholder="Search donors...">
+                    </div>
+                </div>
+
+                <!-- Grid -->
+                <div id="donations-grid" class="row g-4 overflow-hidden">
+                    <!-- Loaded dynamically -->
+                </div>
+
+                <!-- Empty state -->
+                <div id="donations-empty" class="text-center py-5 d-none" data-aos="fade-up">
+                    <div class="mb-4">
+                        <div class="bg-success bg-opacity-10 text-success p-4 rounded-circle d-inline-flex" style="font-size: 2rem;">
+                            <i class="fa-solid fa-basket-shopping"></i>
+                        </div>
+                    </div>
+                    <h5 class="fw-bold mb-2">All clear in your area!</h5>
+                    <p class="text-muted mb-0">No available donations nearby right now. Check back soon — donors are active daily.</p>
+                </div>
+
+                <!-- Loading spinner -->
+                <div id="donations-loading" class="text-center py-5">
+                    <div class="spinner-border text-success" role="status" style="width: 3rem; height: 3rem;">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="text-muted mt-3">Fetching nearby rescue opportunities...</p>
+                </div>
+
+                <!-- Pagination -->
+                <div class="text-center mt-5 mb-5" id="load-more-container" data-aos="fade-up" style="display: none !important;">
+                    <button class="btn btn-outline-dark rounded-pill px-5 py-2 fw-bold">Load More Surpluses <i class="fa-solid fa-chevron-down ms-2"></i></button>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <nav th:replace="~{fragments/common :: scripts}"></nav>
+    <style>
+        .ls-1 { letter-spacing: 0.05em; }
+        .uppercase { text-transform: uppercase; }
+        .transition-hover { transition: var(--transition); }
+        .transition-hover:hover { border-color: var(--primary) !important; transform: translateY(-3px); }
+        .btn-white { background: white; color: var(--text-main); border: 1px solid var(--border-color); }
+    </style>
+    <script>
+        const FOOD_IMAGES = [
+            'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80&w=400',
+            'https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?auto=format&fit=crop&q=80&w=400',
+            'https://images.unsplash.com/photo-1567521464027-f127ff144326?auto=format&fit=crop&q=80&w=400',
+            'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&q=80&w=400',
+        ];
+
+        function timeUntilExpiry(expiryTime) {
+            if (!expiryTime) return 'N/A';
+            const now = new Date();
+            const expiry = new Date(expiryTime);
+            const diff = expiry - now;
+            if (diff <= 0) return 'EXPIRED';
+            const h = Math.floor(diff / 3600000);
+            const m = Math.floor((diff % 3600000) / 60000);
+            return h > 0 ? `${h}h ${m}m` : `${m}m`;
+        }
+
+        function formatDate(iso) {
+            if (!iso) return '';
+            return new Date(iso).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
+        }
+
+        function renderCard(donation, index) {
+            const img = FOOD_IMAGES[index % FOOD_IMAGES.length];
+            const expiry = timeUntilExpiry(donation.expiryTime);
+            const isExpired = expiry === 'EXPIRED';
+            const isCritical = !isExpired && (new Date(donation.expiryTime) - new Date()) < 3 * 3600000;
+            const statusBadge = isExpired
+                ? `<span class="badge bg-secondary rounded-pill px-3 py-2 shadow-sm">EXPIRED</span>`
+                : isCritical
+                    ? `<span class="badge bg-danger rounded-pill px-3 py-2 shadow-sm">CRITICAL</span>`
+                    : `<span class="badge bg-success rounded-pill px-3 py-2 shadow-sm">AVAILABLE</span>`;
+            const donorName = donation.donorName || 'Anonymous Donor';
+            const address = donation.locationAddress || 'Address not set';
+
+            return `
+            <div class="col-xl-4 col-md-6" data-aos="zoom-in" data-aos-delay="${index * 50}">
+                <div class="card-enterprise p-3 transition-hover h-100">
+                    <div class="position-relative mb-3">
+                        <img src="${img}" class="rounded-4 w-100 object-fit-cover" style="height: 200px;" 
+                             onerror="this.src='https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80&w=400'" alt="${donation.title}">
+                        <div class="position-absolute top-0 start-0 p-3">${statusBadge}</div>
+                        <div class="position-absolute bottom-0 end-0 p-3">
+                            <div class="bg-white px-3 py-2 rounded-4 shadow-lg text-center" style="min-width: 80px;">
+                                <div class="fw-bold text-primary mb-0 lh-1 small">Nearby</div>
+                                <div class="small text-muted" style="font-size: 0.65rem;">LOCATION</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="px-2">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h5 class="fw-bold mb-0 text-truncate" style="max-width: 70%;" title="${donation.title}">${donation.title}</h5>
+                            <div class="text-end">
+                                <div class="fw-bold text-dark mb-0 lh-1">${donation.quantityKg} kg</div>
+                                <div class="small text-muted" style="font-size: 0.65rem;">QUANTITY</div>
+                            </div>
+                        </div>
+                        <p class="small text-muted mb-1"><i class="fa-solid fa-hotel me-1 small"></i> ${donorName}</p>
+                        <p class="small text-muted mb-3 text-truncate" title="${address}"><i class="fa-solid fa-location-dot me-1 small"></i> ${address}</p>
+                        <div class="d-flex bg-light rounded-4 p-3 gap-3 mb-4">
+                            <div class="flex-fill border-end text-center">
+                                <div class="small text-muted uppercase ls-1 mb-1" style="font-size: 0.6rem;">Category</div>
+                                <div class="fw-bold small">${donation.foodCategory || '—'}</div>
+                            </div>
+                            <div class="flex-fill text-center">
+                                <div class="small text-muted uppercase ls-1 mb-1" style="font-size: 0.6rem;">Expires In</div>
+                                <div class="fw-bold ${isExpired ? 'text-secondary' : isCritical ? 'text-danger' : 'text-success'}">${expiry}</div>
+                            </div>
+                        </div>
+                        <div class="row g-2">
+                            <div class="col-8">
+                                <button class="btn btn-enterprise btn-enterprise-primary w-100 small" 
+                                        onclick="acceptMission(${donation.id}, this)" 
+                                        ${isExpired ? 'disabled' : ''}>
+                                    <i class="fa-solid fa-handshake me-1"></i> Accept Mission
+                                </button>
+                            </div>
+                            <div class="col-4">
+                                <button class="btn btn-light w-100 border small" title="${address}">
+                                    <i class="fa-solid fa-info-circle"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+        }
+
+        async function acceptMission(donationId, btn) {
+            const token = localStorage.getItem('jwt_token') || localStorage.getItem('token');
+            if (!token) { if (window.showToast) window.showToast('Session expired. Please log in again.', 'error'); return; }
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Accepting...';
+            try {
+                const res = await fetch(`/api/food/${donationId}/status`, {
+                    method: 'PATCH',
+                    headers: { 
+                        'Authorization': 'Bearer ' + token,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ status: 'ACCEPTED' })
+                });
+                if (res.ok) {
+                    if (window.showToast) window.showToast('Mission accepted! The donor has been notified.', 'success');
+                    btn.closest('.col-xl-4, .col-md-6').querySelector('.badge').className = 'badge bg-primary rounded-pill px-3 py-2 shadow-sm';
+                    btn.closest('.col-xl-4, .col-md-6').querySelector('.badge').textContent = 'ACCEPTED';
+                    btn.textContent = '✓ Accepted';
+                    btn.classList.remove('btn-enterprise-primary');
+                    btn.classList.add('btn-outline-secondary');
+                    btn.disabled = true;
+                } else {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fa-solid fa-handshake me-1"></i> Accept Mission';
+                    const err = await res.json().catch(() => ({}));
+                    if (window.showToast) window.showToast(err.message || 'Could not accept mission.', 'error');
+                }
+            } catch(e) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-handshake me-1"></i> Accept Mission';
+                if (window.showToast) window.showToast('Network error. Please try again.', 'error');
+            }
+        }
+
+        async function loadDonations() {
+            const token = localStorage.getItem('jwt_token') || localStorage.getItem('token');
+            const grid = document.getElementById('donations-grid');
+            const empty = document.getElementById('donations-empty');
+            const loading = document.getElementById('donations-loading');
+
+            if (!token) {
+                loading.classList.add('d-none');
+                empty.classList.remove('d-none');
+                empty.querySelector('h5').textContent = 'Please log in to view donations.';
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/food', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                loading.classList.add('d-none');
+
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+                const donations = await res.json();
+                const available = donations.filter(d => d.status === 'AVAILABLE');
+
+                if (available.length === 0) {
+                    empty.classList.remove('d-none');
+                } else {
+                    grid.innerHTML = available.map((d, i) => renderCard(d, i)).join('');
+                    // Re-init AOS for newly rendered elements
+                    if (window.AOS) AOS.refresh();
+                }
+            } catch (err) {
+                loading.classList.add('d-none');
+                empty.classList.remove('d-none');
+                empty.querySelector('h5').textContent = 'Unable to load donations.';
+                empty.querySelector('p').textContent = 'Server error: ' + err.message + '. Please try refreshing.';
+                console.error('Failed to load donations:', err);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', loadDonations);
+    </script>
+</body>
+</html>
+

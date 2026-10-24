@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/common :: head('Sign In')}"></head>
+<body class="bg-light">
+
+    <div class="container-fluid p-0">
+        <div class="row g-0 min-vh-100">
+            <!-- Left Side: Visual/Branding (Hidden on mobile) -->
+            <div class="col-lg-6 d-none d-lg-flex bg-dark position-relative overflow-hidden align-items-center p-5">
+                <div class="position-absolute top-0 start-0 w-100 h-100 opacity-20">
+                    <img src="https://images.unsplash.com/photo-1488459711616-2cbb27922b7a?auto=format&fit=crop&q=80&w=1000" alt="Background" class="w-100 h-100 object-fit-cover">
+                </div>
+                <div class="position-relative z-index-1 text-white" data-aos="fade-up">
+                    <a href="/" class="d-flex align-items-center gap-2 fw-bold fs-3 text-white mb-5 text-decoration-none">
+                        <i class="fa-solid fa-leaf text-success"></i> FoodRescue<span class="text-success">AI</span>
+                    </a>
+                    <h1 class="display-4 fw-bold mb-4">Empowering <br><span class="text-success">Communities</span> via AI.</h1>
+                    <p class="lead opacity-75 mb-5 pe-lg-5">Connect with the global food rescue ecosystem and start making a measurable impact on waste and hunger today.</p>
+
+                    <div class="d-flex align-items-center gap-4 border-start border-success border-4 ps-4 py-2 bg-success bg-opacity-10 rounded-end">
+                        <div>
+                            <div class="fs-4 fw-bold">Impact Verified</div>
+                            <div class="small opacity-75">Join 40,000+ donors worldwide.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Floating Decorative Elements -->
+                <div class="position-absolute bottom-0 end-0 p-5 opacity-10">
+                    <i class="fa-solid fa-earth-americas" style="font-size: 20rem;"></i>
+                </div>
+            </div>
+
+            <!-- Right Side: Login Form -->
+            <div class="col-lg-6 d-flex align-items-center justify-content-center p-5">
+                <div class="w-100" style="max-width: 440px;" data-aos="fade-left">
+
+                    <!-- Mobile Logo -->
+                    <div class="d-lg-none text-center mb-5">
+                        <a href="/" class="d-flex align-items-center justify-content-center gap-2 fw-bold fs-3 text-dark text-decoration-none">
+                            <i class="fa-solid fa-leaf text-success"></i> FoodRescueAI
+                        </a>
+                    </div>
+
+                    <div class="mb-5">
+                        <h2 class="fw-bold mb-2">Welcome Back</h2>
+                        <p class="text-muted">Enter your credentials to access your global rescue dashboard.</p>
+                    </div>
+
+                    <!-- Error Alert (hidden by default) -->
+                    <div id="loginError" class="alert alert-danger border-0 rounded-4 d-none mb-4" role="alert">
+                        <i class="fa-solid fa-circle-exclamation me-2"></i>
+                        <span id="loginErrorMsg">Invalid email or password.</span>
+                    </div>
+
+                    <!-- Role Detection Badge -->
+                    <div class="alert alert-info border-0 rounded-4 d-flex align-items-center gap-3 mb-4 p-3 bg-opacity-10 text-primary">
+                        <i class="fa-solid fa-circle-info"></i>
+                        <div class="small fw-semibold">Role-based access will be automatically applied.</div>
+                    </div>
+
+                    <!-- B-04 FIX: Added ids on inputs + JS submit handler -->
+                    <form id="loginForm" class="needs-validation" novalidate>
+                        <div class="mb-4">
+                            <label for="loginEmail" class="form-label small fw-bold text-muted mb-2 ls-1 uppercase">Email Address</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white border-end-0 text-muted"><i class="fa-regular fa-envelope"></i></span>
+                                <input type="email" id="loginEmail" name="email" class="form-control border-start-0 ps-0 py-2 fs-6" placeholder="name@company.com" required autocomplete="email">
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between">
+                                <label for="loginPassword" class="form-label small fw-bold text-muted mb-2 ls-1 uppercase">Password</label>
+                                <a href="#" class="small text-success fw-bold text-decoration-none">Forgot Password?</a>
+                            </div>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white border-end-0 text-muted"><i class="fa-solid fa-lock"></i></span>
+                                <input type="password" id="loginPassword" name="password" class="form-control border-start-0 ps-0 py-2 fs-6" placeholder="••••••••" required autocomplete="current-password">
+                            </div>
+                        </div>
+
+                        <div class="mb-4 d-flex align-items-center justify-content-between">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="rememberMe">
+                                <label class="form-check-label small text-muted" for="rememberMe">Remember for 30 days</label>
+                            </div>
+                        </div>
+
+                        <button type="submit" id="loginBtn" class="btn btn-enterprise btn-enterprise-primary w-100 py-3 rounded-3 mb-4">
+                            <span id="loginBtnText">Sign In to Platform <i class="fa-solid fa-arrow-right ms-2"></i></span>
+                            <span id="loginBtnSpinner" class="d-none">
+                                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Signing in...
+                            </span>
+                        </button>
+
+                        <div class="text-center mt-5">
+                            <p class="text-muted small">Don't have an account yet? <a href="/register" class="text-success fw-bold">Sign up for free.</a></p>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div th:replace="~{fragments/common :: scripts}"></div>
+
+    <script>
+    // Clear stale authentication credentials upon loading the login page
+    localStorage.removeItem('jwt_token');
+    sessionStorage.removeItem('fr_user');
+
+    // B-04 FIX: Login form submit handler - calls /api/auth/login and redirects by role
+    document.getElementById('loginForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const email    = document.getElementById('loginEmail').value.trim();
+        const password = document.getElementById('loginPassword').value;
+        const errorDiv = document.getElementById('loginError');
+        const errorMsg = document.getElementById('loginErrorMsg');
+        const btnText  = document.getElementById('loginBtnText');
+        const spinner  = document.getElementById('loginBtnSpinner');
+
+        // Clear previous errors
+        errorDiv.classList.add('d-none');
+
+        // Show loading state
+        btnText.classList.add('d-none');
+        spinner.classList.remove('d-none');
+
+        try {
+            const response = await window.fetch('/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.message || 'Login failed. Check your credentials.');
+            }
+
+            // Store JWT token
+            localStorage.setItem('jwt_token', data.token);
+
+            // Cache user info (including persistent database ID)
+            sessionStorage.setItem('fr_user', JSON.stringify({
+                id:    data.id,
+                email: data.email,
+                name:  data.name,
+                role:  data.role
+            }));
+
+            // Redirect based on role (ROLE_DONOR, ROLE_NGO, ROLE_ADMIN)
+            const role = (data.role || '').replace('ROLE_', '');
+            if (role === 'ADMIN') {
+                window.location.href = '/admin/dashboard';
+            } else if (role === 'NGO') {
+                window.location.href = '/ngo/dashboard';
+            } else {
+                window.location.href = '/donor/dashboard';
+            }
+
+        } catch (err) {
+            errorMsg.textContent = err.message || 'Login failed. Please try again.';
+            errorDiv.classList.remove('d-none');
+        } finally {
+            btnText.classList.remove('d-none');
+            spinner.classList.add('d-none');
+        }
+    });
+
+    // Show session expired message if redirected here
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('session_expired')) {
+        document.getElementById('loginErrorMsg').textContent = 'Your session has expired. Please sign in again.';
+        document.getElementById('loginError').classList.remove('d-none');
+    }
+    </script>
+
+    <style>
+        .ls-1 { letter-spacing: 0.05em; }
+        .uppercase { text-transform: uppercase; }
+        .input-group-text { border-color: var(--border-color, #dee2e6); }
+        .form-control:focus { box-shadow: none; }
+    </style>
+</body>
+</html>

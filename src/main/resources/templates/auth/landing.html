@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/common :: head('Zero Waste, Full Hearts')}"></head>
+<body class="bg-white">
+
+    <!-- Header / Nav -->
+    <nav class="navbar navbar-expand-lg border-0 bg-transparent py-4 position-absolute w-100">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center gap-2 fw-bold fs-3 text-dark" href="/">
+                <i class="fa-solid fa-leaf text-success"></i> FoodRescue<span class="text-success">AI</span>
+            </a>
+            <div class="d-flex align-items-center gap-3">
+                <a href="/login" class="btn btn-link text-dark fw-semibold text-decoration-none">Sign In</a>
+                <a href="/register" class="btn btn-enterprise btn-enterprise-primary rounded-pill px-4">Join Platform</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero-section pt-5 pb-5 mt-5">
+        <div class="container pt-5">
+            <div class="row align-items-center g-5">
+                <div class="col-lg-6" data-aos="fade-right">
+                    <span class="badge bg-success bg-opacity-10 text-success px-3 py-2 rounded-pill fw-bold mb-3">Enterprise AI Platform</span>
+                    <h1 class="display-3 fw-800 mb-4 lh-tight">Redistributing Excess, <span class="text-success">Rescuing Humanity.</span></h1>
+                    <p class="lead text-muted mb-5 pe-lg-5">The world's most advanced AI-powered ecosystem for food waste management. Connecting surplus donors with NGOs in real-time to eliminate hunger.</p>
+                    <div class="d-flex flex-wrap gap-3">
+                        <a href="/register" class="btn btn-enterprise btn-enterprise-primary btn-lg rounded-pill px-5">Start Rescuing Now</a>
+                        <a href="#how-it-works" class="btn btn-outline-dark btn-lg rounded-pill px-4">Watch Demo <i class="fa-solid fa-play ms-2 fs-6"></i></a>
+                    </div>
+                    <div class="mt-5 d-flex align-items-center gap-4">
+                        <div class="d-flex -space-x-3">
+                            <img src="https://ui-avatars.com/api/?name=NGO+1&background=10b981&color=fff" class="rounded-circle border border-white" style="width: 40px; height: 40px;" alt="">
+                            <img src="https://ui-avatars.com/api/?name=NGO+2&background=3b82f6&color=fff" class="rounded-circle border border-white ms-n2" style="width: 40px; height: 40px;" alt="">
+                            <img src="https://ui-avatars.com/api/?name=NGO+3&background=f59e0b&color=fff" class="rounded-circle border border-white ms-n2" style="width: 40px; height: 40px;" alt="">
+                        </div>
+                        <div class="small fw-semibold text-muted">Trusted by <span class="text-dark fw-bold">500+ NGOs</span> globally</div>
+                    </div>
+                </div>
+                <div class="col-lg-6" data-aos="zoom-in">
+                    <div class="position-relative">
+                        <div class="bg-success rounded-4 position-absolute top-0 start-0 w-100 h-100 opacity-10 rotate-3"></div>
+                        <img src="https://images.unsplash.com/photo-1593113598332-cd288d649433?auto=format&fit=crop&q=80&w=1000" alt="Rescuing Food" class="img-fluid rounded-4 shadow-lg position-relative z-index-1">
+                        
+                        <!-- Floating Stat Card -->
+                        <div class="card-enterprise border-0 shadow-lg position-absolute bottom-0 start-0 mb-n4 ms-n4 d-none d-md-block" style="width: 260px;">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="bg-primary bg-opacity-10 p-3 rounded-circle text-primary">
+                                    <i class="fa-solid fa-bolt fs-4"></i>
+                                </div>
+                                <div>
+                                    <h4 class="mb-0">1.2M+</h4>
+                                    <p class="small text-muted mb-0">Meals Rescued</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="py-5 bg-light border-top border-bottom">
+        <div class="container">
+            <div class="row g-4 text-center">
+                <div class="col-md-3" data-aos="fade-up" data-aos-delay="100">
+                    <h2 class="fw-bold">4.2k</h2>
+                    <p class="text-muted text-uppercase small fw-bold">Active Donors</p>
+                </div>
+                <div class="col-md-3" data-aos="fade-up" data-aos-delay="200">
+                    <h2 class="fw-bold">850k</h2>
+                    <p class="text-muted text-uppercase small fw-bold">Kg Redirected</p>
+                </div>
+                <div class="col-md-3" data-aos="fade-up" data-aos-delay="300">
+                    <h2 class="fw-bold">12k</h2>
+                    <p class="text-muted text-uppercase small fw-bold">Daily Rescues</p>
+                </div>
+                <div class="col-md-3" data-aos="fade-up" data-aos-delay="400">
+                    <h2 class="fw-bold">98%</h2>
+                    <p class="text-muted text-uppercase small fw-bold">Success Rate</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Partners / Success Stories -->
+    <section class="py-5">
+        <div class="container text-center py-5">
+            <h6 class="text-success text-uppercase fw-bold mb-4">Our Partners</h6>
+            <div class="d-flex flex-wrap justify-content-center align-items-center gap-5 opacity-50">
+                <h4 class="fw-bold"> Marriott </h4>
+                <h4 class="fw-bold"> Hilton </h4>
+                <h4 class="fw-bold"> Starbucks </h4>
+                <h4 class="fw-bold"> Whole Foods </h4>
+                <h4 class="fw-bold"> Walmart </h4>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features / How It Works -->
+    <section id="how-it-works" class="py-5 overflow-hidden">
+        <div class="container py-5">
+            <div class="text-center mb-5" data-aos="fade-up">
+                <h2 class="display-5 fw-bold mb-3">Simple Rescue, Massive Impact</h2>
+                <p class="lead text-muted mx-auto" style="max-width: 700px;">Our AI-first approach streamlines the entire donation lifecycle from upload to pickup.</p>
+            </div>
+            
+            <div class="row g-4">
+                <div class="col-md-4" data-aos="fade-up" data-aos-delay="100">
+                    <div class="p-4 rounded-4 border bg-white h-100 transition-hover">
+                        <div class="bg-primary bg-opacity-10 text-primary w-60 h-60 rounded-3 d-flex align-items-center justify-content-center mb-4">
+                            <i class="fa-solid fa-camera-retro fs-3"></i>
+                        </div>
+                        <h4>AI Image Analysis</h4>
+                        <p class="text-muted">Snap a photo and our AI automatically detects food type, quantity, and calculates estimated freshness.</p>
+                    </div>
+                </div>
+                <div class="col-md-4" data-aos="fade-up" data-aos-delay="200">
+                    <div class="p-4 rounded-4 border bg-white h-100 transition-hover shadow-sm">
+                        <div class="bg-warning bg-opacity-10 text-warning w-60 h-60 rounded-3 d-flex align-items-center justify-content-center mb-4">
+                            <i class="fa-solid fa-map-location-dot fs-3"></i>
+                        </div>
+                        <h4>Smart NGO Matching</h4>
+                        <p class="text-muted">We automatically alert the nearest verified NGOs based on quantity and required urgency.</p>
+                    </div>
+                </div>
+                <div class="col-md-4" data-aos="fade-up" data-aos-delay="300">
+                    <div class="p-4 rounded-4 border bg-white h-100 transition-hover">
+                        <div class="bg-info bg-opacity-10 text-info w-60 h-60 rounded-3 d-flex align-items-center justify-content-center mb-4">
+                            <i class="fa-solid fa-route fs-3"></i>
+                        </div>
+                        <h4>Real-time Logistics</h4>
+                        <p class="text-muted">Track the entire rescue mission with real-time map updates and optimized pickup routes.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="py-5 bg-dark text-white border-top border-secondary">
+        <div class="container py-4">
+            <div class="row g-5">
+                <div class="col-lg-4">
+                    <a class="navbar-brand d-flex align-items-center gap-2 fw-bold fs-4 text-white mb-4" href="/">
+                        <i class="fa-solid fa-leaf text-success"></i> FoodRescue<span class="text-success">AI</span>
+                    </a>
+                    <p class="text-muted">Revolutionizing food waste management with artificial intelligence and a passion for zero hunger.</p>
+                    <div class="d-flex gap-3 fs-5 mt-4">
+                        <a href="#" class="footer-icon-link"><i class="fa-brands fa-twitter"></i></a>
+                        <a href="#" class="footer-icon-link"><i class="fa-brands fa-linkedin"></i></a>
+                        <a href="#" class="footer-icon-link"><i class="fa-brands fa-github"></i></a>
+                    </div>
+                </div>
+                <div class="col-lg-2 offset-lg-1 col-6">
+                    <h6 class="fw-bold mb-4">Platform</h6>
+                    <ul class="list-unstyled text-muted small lh-lg">
+                        <li><a href="#">For Donors</a></li>
+                        <li><a href="#">For NGOs</a></li>
+                        <li><a href="#">AI Vision</a></li>
+                        <li><a href="#">Logistics</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-2 col-6">
+                    <h6 class="fw-bold mb-4">Company</h6>
+                    <ul class="list-unstyled text-muted small lh-lg">
+                        <li><a href="#">About Us</a></li>
+                        <li><a href="#">Success Stories</a></li>
+                        <li><a href="#">Partner Program</a></li>
+                        <li><a href="#">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-3">
+                    <h6 class="fw-bold mb-4">Newsletter</h6>
+                    <div class="input-group">
+                        <input type="text" class="form-control bg-transparent border-secondary text-white" placeholder="Email Address">
+                        <button class="btn btn-success"><i class="fa-solid fa-paper-plane"></i></button>
+                    </div>
+                </div>
+            </div>
+            <hr class="my-5 border-secondary">
+            <div class="d-flex flex-wrap justify-content-between text-muted small">
+                <p>&copy; 2026 FoodRescue AI Platform. All rights reserved.</p>
+                <div class="d-flex gap-4">
+                    <a href="#">Privacy Policy</a>
+                    <a href="#">Terms of Service</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <div th:replace="~{fragments/common :: scripts}"></div>
+    
+    <style>
+        .n2 { margin-left: -0.75rem; }
+        .transition-hover:hover { transform: translateY(-5px); border-color: var(--primary) !important; }
+        .fw-800 { font-weight: 800; }
+        .w-60 { width: 60px; }
+        .h-60 { height: 60px; }
+
+        /* ── Footer Link Visibility Fix ──────────────────────────────────────
+           Bootstrap's .text-muted on bg-dark renders as unclear grey on dark.
+           Anchor tags with no explicit color inherit that grey value.
+           These rules give all footer links a clearly readable contrast colour.
+        */
+        footer a {
+            color: rgba(255, 255, 255, 0.65);
+            transition: color 0.2s ease;
+        }
+        footer a:hover {
+            color: #ffffff;
+            text-decoration: none;
+        }
+        /* Social icon links need slightly higher base opacity for icon readability */
+        footer .footer-icon-link {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 1.1rem;
+        }
+        footer .footer-icon-link:hover {
+            color: #10b981;
+        }
+    </style>
+</body>
+</html>

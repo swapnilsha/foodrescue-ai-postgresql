@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{fragments/common :: head('Global Map Center')}"></head>
+
+<body class="overflow-hidden">
+
+    <div class="app-wrapper">
+        <aside th:replace="~{fragments/sidebar :: sidebar('map', 'NGO')}"></aside>
+
+        <div class="main-container">
+            <nav th:replace="~{fragments/navbar :: navbar}"></nav>
+
+            <main class="p-0 position-relative" style="height: calc(100vh - var(--navbar-height)); overflow: hidden;">
+                <!-- Full Screen Map Container -->
+                <div id="map-container" class="w-100 h-100 bg-light position-relative">
+                    <!-- Real Google Maps Canvas -->
+                    <div id="google-map-canvas" style="width:100%; height:100%;"></div>
+
+                    <!-- Fallback / Loading Placeholder (hidden when maps loads) -->
+                    <div id="map-loading-placeholder"
+                        class="w-100 h-100 bg-secondary bg-opacity-10 d-flex align-items-center justify-content-center position-absolute top-0 start-0">
+                        <div class="text-center opacity-75">
+                            <i class="fa-solid fa-map-location-dot display-1 text-primary mb-3" aria-hidden="true"></i>
+                            <h3 class="fw-bold">Global Map Command Center</h3>
+                            <p class="text-muted">Loading real-time geolocation assets...</p>
+                            <p class="small text-muted">Add a Google Maps API key to enable live maps.</p>
+                        </div>
+                    </div>
+
+                    <!-- Floating Map Controls -->
+                    <div class="position-absolute top-0 start-0 m-4 d-flex flex-column gap-2" style="z-index: 10;">
+                        <div class="bg-white p-3 rounded-4 shadow-lg border border-custom" style="width: 280px;">
+                            <h6 class="fw-bold mb-3 small uppercase ls-1 text-muted">Map Layers</h6>
+                            <div class="d-flex flex-column gap-2">
+                                <div class="form-check form-switch small">
+                                    <input class="form-check-input" type="checkbox" checked id="layerDonors">
+                                    <label class="form-check-label fw-bold" for="layerDonors">Available Donors
+                                        (18)</label>
+                                </div>
+                                <div class="form-check form-switch small">
+                                    <input class="form-check-input" type="checkbox" checked id="layerFleet">
+                                    <label class="form-check-label fw-bold" for="layerFleet">Active Fleet (4)</label>
+                                </div>
+                                <div class="form-check form-switch small">
+                                    <input class="form-check-input" type="checkbox" id="layerHeatmap">
+                                    <label class="form-check-label fw-bold" for="layerHeatmap">Waste Heatmaps</label>
+                                </div>
+                                <div class="form-check form-switch small">
+                                    <input class="form-check-input" type="checkbox" id="layerCharities">
+                                    <label class="form-check-label fw-bold" for="layerCharities">Drop-off Points
+                                        (12)</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Floating Right Panel: Nearby Feed -->
+                    <div class="position-absolute top-0 end-0 h-100 p-4 d-none d-lg-block"
+                        style="z-index: 10; width: 340px;">
+                        <div
+                            class="bg-white h-100 rounded-4 shadow-lg border border-custom d-flex flex-column overflow-hidden">
+                            <div class="p-4 border-bottom bg-light">
+                                <h6 class="fw-bold mb-0">Live Rescue Stream</h6>
+                                <p class="extra-small text-muted mb-0">Updated 10 seconds ago</p>
+                            </div>
+                            <div class="flex-grow-1 overflow-y-auto p-3 d-flex flex-column gap-3" id="live-rescue-stream-container">
+                                <!-- Rendered dynamically -->
+                            </div>
+                            <div class="p-3 bg-dark text-white text-center">
+                                <div class="small fw-bold">Active Search Radius: 12km</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bottom Floating Info (Selected Node) -->
+                    <div class="position-absolute bottom-0 start-50 translate-middle-x mb-4 w-100 px-4"
+                        style="z-index: 10; max-width: 800px;">
+                        <div class="card bg-white shadow-2xl border-0 rounded-4 overflow-hidden shadow-lg animate-up"
+                            id="mapInfoCard" style="display: none;">
+                            <div class="row g-0">
+                                <div class="col-8 p-4">
+                                    <div class="d-flex align-items-center gap-3 mb-3">
+                                        <div class="bg-success text-white p-3 rounded-4 shadow-sm">
+                                            <i class="fa-solid fa-utensils fs-3"></i>
+                                        </div>
+                                        <div>
+                                            <h5 class="fw-bold mb-1" id="nodeTitle">The Grand Plaza Buffet</h5>
+                                            <p class="small text-muted mb-0"><i class="fa-solid fa-map-pin me-2"></i>
+                                                4th Ave, Metropolis Centre • <span class="text-success fw-bold">Verified
+                                                    Donor</span></p>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex gap-4" id="map-node-details">
+                                        <div>
+                                            <div class="extra-small text-muted uppercase fw-bold">Est. Weight</div>
+                                            <div class="fw-bold text-dark">45.0 kg</div>
+                                        </div>
+                                        <div>
+                                            <div class="extra-small text-muted uppercase fw-bold">Time Window</div>
+                                            <div class="fw-bold text-danger">Until 4:00 PM</div>
+                                        </div>
+                                        <div>
+                                            <div class="extra-small text-muted uppercase fw-bold">Accessibility</div>
+                                            <div class="fw-bold text-primary">Wheelchair/Ramp</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div
+                                    class="col-4 p-4 bg-light d-flex flex-column justify-content-center gap-2 border-start">
+                                    <button class="btn btn-enterprise btn-enterprise-primary w-100 fw-bold">Assign to
+                                        Fleet</button>
+                                    <button class="btn btn-outline-dark btn-sm w-100 fw-bold"
+                                        onclick="hideMapInfo()">Close Overlay</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Initial Hint -->
+                        <div class="text-center" id="mapHint">
+                            <span
+                                class="badge bg-dark bg-opacity-75 rounded-pill px-4 py-2 fs-6 shadow-lg backdrop-blur">
+                                <i class="fa-solid fa-hand-pointer me-2"></i> Select a donor pin to view rescue details
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <nav th:replace="~{fragments/common :: scripts}"></nav>
+
+    <!--
+        IMPORTANT: Replace YOUR_GOOGLE_MAPS_API_KEY with your actual key.
+        Enable the Maps JavaScript API, Directions API, and Distance Matrix API.
+    -->
+    <script>
+        // ── Google Maps Initialization ──────────────────────────────────────────
+        // Called by the Google Maps script callback
+        function initGoogleMap() {
+            if (!window.mapIntegration) return;
+
+            const map = window.mapIntegration.initMap('google-map-canvas', {
+                center: { lat: 40.7128, lng: -74.0060 }, // Default: New York
+                zoom: 13
+            });
+
+            if (!map) {
+                document.getElementById('map-loading-placeholder').style.display = 'flex';
+                return;
+            }
+
+            document.getElementById('map-loading-placeholder').style.display = 'none';
+
+            // Load real available donations from MySQL
+            if (window.api) {
+                window.api.get('/food').then(donations => {
+                    const available = donations ? donations.filter(d => d.status === 'AVAILABLE') : [];
+                    
+                    // Render Map Layers checklists counts dynamically!
+                    const labelDonors = document.querySelector('label[for="layerDonors"]');
+                    if (labelDonors) {
+                        labelDonors.textContent = `Available Donors (${available.length})`;
+                    }
+
+                    // Update Live Rescue Stream container
+                    const streamContainer = document.getElementById('live-rescue-stream-container');
+                    if (streamContainer) {
+                        if (available.length > 0) {
+                            streamContainer.innerHTML = available.map((d, index) => {
+                                return `
+                                    <div class="p-3 border rounded-4 bg-white shadow-sm border-custom animate-up">
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                            <h6 class="fw-bold mb-0 small text-truncate" style="max-width:70%;" title="${d.title}">${d.title}</h6>
+                                            <span class="badge bg-${d.urgency === 'HIGH' || d.urgency === 'CRITICAL' ? 'danger' : 'success'} fs-xs">${d.status}</span>
+                                        </div>
+                                        <p class="extra-small text-muted mb-2"><i class="fa-solid fa-leaf me-1"></i> ${d.foodCategory || 'Food'} • ${d.quantityKg}kg</p>
+                                        <div class="d-flex gap-2">
+                                            <button class="btn btn-outline-dark btn-sm w-100 py-1 small fw-bold" onclick="centerOnDonation(${d.location?.latitude || 0}, ${d.location?.longitude || 0})">Pin on Map</button>
+                                            <a href="/ngo/details/${d.id}" class="btn btn-dark btn-sm w-100 py-1 small fw-bold">Details</a>
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('');
+                        } else {
+                            streamContainer.innerHTML = '<p class="text-muted text-center py-4 small">No active rescue streams.</p>';
+                        }
+                    }
+
+                    if (available.length > 0) {
+                        available.forEach(d => {
+                            if (d.location && d.location.latitude && d.location.longitude && d.location.latitude !== 0.0) {
+                                const lat = parseFloat(d.location.latitude);
+                                const lng = parseFloat(d.location.longitude);
+                                const isUrgent = d.urgency === 'HIGH' || d.urgency === 'CRITICAL';
+                                const type = isUrgent ? 'URGENT' : 'DONOR';
+                                const title = `${d.donorName || 'Donor'} – ${d.title}`;
+                                const payload = {
+                                    name: d.donorName || 'Donor',
+                                    category: d.foodCategory || 'Food',
+                                    weight: (d.quantityKg || '—') + ' kg',
+                                    until: d.expiryTime ? new Date(d.expiryTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'N/A',
+                                    badge: d.status || 'AVAILABLE'
+                                };
+                                window.mapIntegration.addMarker(lat, lng, type, title, payload);
+                            }
+                        });
+                    }
+                }).catch(err => {
+                    console.error("Failed to load map donation pins:", err);
+                });
+            }
+        }
+
+        function centerOnDonation(lat, lng) {
+            if (lat && lng && lat !== 0.0 && window.mapIntegration?.map) {
+                window.mapIntegration.map.setCenter({ lat, lng });
+                window.mapIntegration.map.setZoom(15);
+            } else {
+                if (window.showToast) window.showToast('Location unavailable', 'warning');
+            }
+
+            // Listen for marker clicks from map-integration
+            if (window.stateManager) {
+                window.stateManager.on('markerClicked', (payload) => showMapInfo(payload));
+            }
+
+            // Layer toggle handlers
+            document.getElementById('layerDonors').addEventListener('change', function () {
+                window.mapIntegration.markers.forEach(m => {
+                    if (m.title.includes('Produce') || m.title.includes('Diner') || m.title.includes('Marriott'))
+                        m.setMap(this.checked ? window.mapIntegration.map : null);
+                });
+            });
+        }
+
+        function showMapInfo(payload) {
+            const hint = document.getElementById('mapHint');
+            const card = document.getElementById('mapInfoCard');
+            const title = document.getElementById('nodeTitle');
+
+            if (hint) hint.style.display = 'none';
+            if (title) title.textContent = payload.name || 'Donation Node';
+
+            // Update card details
+            const detailsContainer = document.getElementById('map-node-details');
+            if (detailsContainer && payload) {
+                detailsContainer.innerHTML = `
+                    <div>
+                        <div class="extra-small text-muted uppercase fw-bold">Est. Weight</div>
+                        <div class="fw-bold text-dark">${payload.weight || '—'}</div>
+                    </div>
+                    <div>
+                        <div class="extra-small text-muted uppercase fw-bold">Time Window</div>
+                        <div class="fw-bold text-danger">Until ${payload.until || '—'}</div>
+                    </div>
+                    <div>
+                        <div class="extra-small text-muted uppercase fw-bold">Category</div>
+                        <div class="fw-bold text-primary">${payload.category || '—'}</div>
+                    </div>
+                `;
+            }
+
+            if (card) {
+                card.style.display = 'block';
+                card.classList.add('animate-up');
+            }
+        }
+
+        function hideMapInfo() {
+            document.getElementById('mapInfoCard').style.display = 'none';
+            document.getElementById('mapHint').style.display = 'block';
+        }
+
+        // Geolocation: center map on user's location
+        document.addEventListener('DOMContentLoaded', () => {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition((pos) => {
+                    if (window.mapIntegration?.map) {
+                        window.mapIntegration.map.setCenter({
+                            lat: pos.coords.latitude,
+                            lng: pos.coords.longitude
+                        });
+                    }
+                });
+            }
+        });
+    </script>
+
+    <!--
+        Load Google Maps API last. Replace PLACEHOLDER_KEY with your key.
+        callback=initGoogleMap will call our function after maps loads.
+    -->
+    <script
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAOVYRIgupAurZup5y1PRh8Ismb1A3lLao&callback=initGoogleMap"
+        async defer onerror="document.getElementById('map-loading-placeholder').style.display='flex';"></script>
+
+    <style>
+        #google-map-canvas {
+            width: 100%;
+            height: 100%;
+        }
+
+        .fs-xs {
+            font-size: 0.65rem;
+        }
+
+        .ls-1 {
+            letter-spacing: 0.1em;
+        }
+
+        .uppercase {
+            text-transform: uppercase;
+        }
+
+        .animate-up {
+            animation: fadeInUp 0.5s ease-out;
+        }
+
+        .backdrop-blur {
+            backdrop-filter: blur(8px);
+        }
+
+        .shadow-2xl {
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .extra-small {
+            font-size: 0.65rem;
+        }
+    </style>
+</body>
+
+</html>

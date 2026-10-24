@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{fragments/common :: head('Access Denied')}"></head>
+<body>
+    <div class="d-flex align-items-center justify-content-center vh-100 bg-light">
+        <div class="text-center" style="max-width: 520px; padding: 2rem;" data-aos="fade-up">
+            <!-- Animated Icon -->
+            <div class="position-relative d-inline-block mb-4">
+                <div class="bg-danger bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center"
+                     style="width: 140px; height: 140px; margin: 0 auto;">
+                    <i class="fa-solid fa-shield-halved text-danger" style="font-size: 4rem;"></i>
+                </div>
+                <div class="position-absolute top-0 end-0 bg-danger rounded-circle d-flex align-items-center justify-content-center"
+                     style="width: 36px; height: 36px; border: 3px solid white;">
+                    <i class="fa-solid fa-xmark text-white small"></i>
+                </div>
+            </div>
+
+            <!-- Error Code -->
+            <div class="d-flex align-items-center justify-content-center gap-2 mb-3">
+                <span class="badge bg-danger bg-opacity-10 text-danger fw-bold px-3 py-2 rounded-pill" 
+                      style="font-size: 0.75rem; letter-spacing: 0.1em;">
+                    HTTP 403 — FORBIDDEN
+                </span>
+            </div>
+
+            <!-- Heading -->
+            <h1 class="fw-bold mb-2" style="font-size: 2.2rem;">Access Denied</h1>
+            <p class="text-muted mb-5">
+                You don't have the required permissions to view this page.
+                If you believe this is an error, please contact your system administrator.
+            </p>
+
+            <!-- Details Card -->
+            <div class="card border-0 shadow-sm rounded-4 mb-5 text-start">
+                <div class="card-body p-4">
+                    <h6 class="fw-bold mb-3 small text-uppercase text-muted" style="letter-spacing: 0.08em;">
+                        <i class="fa-solid fa-circle-info me-2 text-primary"></i>Why am I seeing this?
+                    </h6>
+                    <ul class="list-unstyled m-0 d-flex flex-column gap-2">
+                        <li class="d-flex align-items-start gap-3 small">
+                            <div class="bg-warning bg-opacity-10 text-warning p-1 rounded mt-1" style="min-width: 24px; text-align: center;">
+                                <i class="fa-solid fa-user-slash fa-xs"></i>
+                            </div>
+                            <span class="text-muted">Your current role (<strong id="current-role-display">Unknown</strong>) is not authorized for this section.</span>
+                        </li>
+                        <li class="d-flex align-items-start gap-3 small">
+                            <div class="bg-primary bg-opacity-10 text-primary p-1 rounded mt-1" style="min-width: 24px; text-align: center;">
+                                <i class="fa-solid fa-clock fa-xs"></i>
+                            </div>
+                            <span class="text-muted">Your session may have expired. Try logging out and back in.</span>
+                        </li>
+                        <li class="d-flex align-items-start gap-3 small">
+                            <div class="bg-success bg-opacity-10 text-success p-1 rounded mt-1" style="min-width: 24px; text-align: center;">
+                                <i class="fa-solid fa-envelope fa-xs"></i>
+                            </div>
+                            <span class="text-muted">Contact your admin at <a href="mailto:support@foodrescue.ai" class="text-success fw-bold text-decoration-none">support@foodrescue.ai</a></span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="d-flex flex-column flex-sm-row gap-3 justify-content-center">
+                <button onclick="history.back()" class="btn btn-light border shadow-sm px-5 rounded-pill fw-bold">
+                    <i class="fa-solid fa-arrow-left me-2"></i>Go Back
+                </button>
+                <a id="dashboard-link" href="/" class="btn btn-enterprise btn-enterprise-primary px-5 rounded-pill fw-bold">
+                    <i class="fa-solid fa-house me-2"></i>Go to Dashboard
+                </a>
+            </div>
+
+            <!-- Footer -->
+            <p class="text-muted mt-5 small">
+                <i class="fa-solid fa-lock me-1"></i>
+                FoodRescue AI — Enterprise Security Layer v3.0
+            </p>
+        </div>
+    </div>
+
+    <nav th:replace="~{fragments/common :: scripts}"></nav>
+    <script>
+        // Display current role if user is logged in
+        document.addEventListener('DOMContentLoaded', () => {
+            // Dynamically detect role from state manager (loaded via common scripts)
+            setTimeout(() => {
+                const role = window.stateManager ? window.stateManager.getRole() : null;
+                const roleDisplay = document.getElementById('current-role-display');
+                if (roleDisplay && role) roleDisplay.textContent = role;
+
+                // Update dashboard link based on role
+                const dashLink = document.getElementById('dashboard-link');
+                if (dashLink && role) {
+                    const roleMap = { 'DONOR': '/donor/dashboard', 'NGO': '/ngo/dashboard', 'ADMIN': '/admin/dashboard' };
+                    dashLink.href = roleMap[role] || '/';
+                }
+            }, 500);
+        });
+    </script>
+    <style>
+        body { background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%); }
+        .btn-enterprise-primary { background: var(--primary, #10b981); color: white; border: none; }
+        .btn-enterprise-primary:hover { background: #059669; color: white; }
+    </style>
+</body>
+</html>

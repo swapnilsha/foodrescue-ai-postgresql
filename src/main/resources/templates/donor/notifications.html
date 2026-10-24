@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/common :: head('Donor Notifications')}"></head>
+<body>
+
+    <div class="app-wrapper">
+        <aside th:replace="~{fragments/sidebar :: sidebar('notifications', 'DONOR')}"></aside>
+
+        <div class="main-container">
+            <nav th:replace="~{fragments/navbar :: navbar}"></nav>
+
+            <main class="content-body">
+                <div class="mb-5 d-flex justify-content-between align-items-center" data-aos="fade-down">
+                    <div>
+                        <h2 class="fw-bold mb-1">Donor Notifications</h2>
+                        <p class="text-muted">Stay updated with rescue alerts and impact milestones.</p>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-light btn-sm px-3 rounded-pill" onclick="markAllRead()">Mark All Read</button>
+                    </div>
+                </div>
+
+                <div class="row justify-content-center">
+                    <div class="col-lg-8" data-aos="fade-up">
+                        <div class="card-enterprise p-0 overflow-hidden shadow-sm">
+                            <div class="notification-list" id="notifications-container">
+                                <div class="text-center py-5">
+                                    <div class="spinner-border text-success" role="status"></div>
+                                    <p class="text-muted mt-2 small">Loading alerts...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <nav th:replace="~{fragments/common :: scripts}"></nav>
+    <!-- Load donation-request.js for date formatter helper -->
+    <script th:src="@{/js/donation-request.js}"></script>
+    <script>
+        async function loadNotifications() {
+            const list = document.getElementById('notifications-container');
+            if (!list) return;
+            try {
+                const notifications = await window.api.get('/notifications');
+                if (notifications.length === 0) {
+                    list.innerHTML = `
+                        <div class="text-center p-5">
+                            <i class="fa-regular fa-bell-slash display-1 text-muted opacity-25 mb-3" aria-hidden="true"></i>
+                            <h5>All caught up!</h5>
+                            <p class="text-muted small">We'll notify you when new rescue events occur.</p>
+                        </div>`;
+                    return;
+                }
+                list.innerHTML = notifications.map(n => {
+                    let icon = 'fa-info-circle';
+                    let bg = 'bg-primary';
+                    if (n.type.includes('ACCEPTED') || n.type.includes('DELIVERED') || n.type.includes('SUCCESS') || n.type.includes('RECEIVED') || n.type.includes('COLLECTED')) {
+                        icon = 'fa-check-double';
+                        bg = 'bg-success';
+                    } else if (n.type.includes('REJECTED') || n.type.includes('DELAY') || n.type.includes('EXPIRED')) {
+                        icon = 'fa-triangle-exclamation';
+                        bg = 'bg-danger';
+                    } else if (n.type.includes('ASSIGNED') || n.type.includes('PICKUP')) {
+                        icon = 'fa-truck';
+                        bg = 'bg-info';
+                    }
+                    
+                    return `
+                        <div class="notif-item p-4 border-bottom d-flex gap-4 ${n.isRead ? 'opacity-75' : 'bg-light bg-opacity-50'}" onclick="markAsRead(${n.id})">
+                            <div class="${bg} text-white p-3 rounded-circle d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; flex-shrink: 0;">
+                                <i class="fa-solid ${icon}"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <h6 class="fw-bold mb-0">${n.type.replace(/_/g, ' ')}</h6>
+                                    <span class="small text-muted">${window.drService ? window.drService.formatDateTime(n.createdAt) : new Date(n.createdAt).toLocaleString()}</span>
+                                </div>
+                                <p class="small text-muted mb-0">${n.message}</p>
+                            </div>
+                            ${!n.isRead ? '<div class="notif-status bg-success rounded-circle" style="width: 8px; height: 8px; flex-shrink:0; margin-top:5px;"></div>' : ''}
+                        </div>
+                    `;
+                }).join('');
+            } catch (e) {
+                list.innerHTML = `<div class="text-center p-5 text-danger">Failed to load notifications: ${e.message}</div>`;
+            }
+        }
+        
+        async function markAsRead(id) {
+            try {
+                await window.api.patch(`/notifications/${id}/read`);
+                await loadNotifications();
+                if (window.stateManager) window.stateManager._loadUnreadCount();
+            } catch(e) {}
+        }
+        
+        async function markAllRead() {
+            try {
+                await window.api.patch('/notifications/read-all');
+                await loadNotifications();
+                if (window.stateManager) window.stateManager._loadUnreadCount();
+            } catch(e) {}
+        }
+
+        document.addEventListener('DOMContentLoaded', loadNotifications);
+    </script>
+    <style>
+        .notif-item { transition: var(--transition); cursor: pointer; }
+        .notif-item:hover { background-color: var(--bg-main) !important; }
+        .notif-status { flex-shrink: 0; margin-top: 5px; }
+    </style>
+</body>
+</html>

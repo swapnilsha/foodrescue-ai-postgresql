@@ -1,0 +1,144 @@
+<!-- Sidebar Fragment -->
+<aside th:fragment="sidebar(activeItem, userRole)" class="sidebar">
+    <div class="sidebar-header">
+        <div class="sidebar-logo">
+            <i class="fa-solid fa-leaf"></i>
+        </div>
+        <a href="/" class="sidebar-brand">FoodRescue<span style="color: var(--primary);">AI</span></a>
+    </div>
+
+    <div class="sidebar-menu">
+        <!-- DONOR MENU -->
+        <div th:if="${userRole == 'DONOR' || userRole == 'SHARED'}" class="sidebar-role-menu" data-menu-role="DONOR" th:style="${userRole == 'SHARED' ? 'display: none !important;' : ''}">
+            <a href="/donor/dashboard" th:classappend="${activeItem == 'dashboard' ? 'active' : ''}" class="menu-item">
+                <i class="fa-solid fa-chart-pie"></i> Executive Overview
+            </a>
+            <a href="/donor/upload" th:classappend="${activeItem == 'upload' ? 'active' : ''}" class="menu-item">
+                <i class="fa-solid fa-cloud-arrow-up"></i> Upload Food
+            </a>
+            <a href="/donor/history" th:classappend="${activeItem == 'history' ? 'active' : ''}" class="menu-item">
+                <i class="fa-solid fa-clock-rotate-left"></i> Donation History
+            </a>
+            <a href="/donor/tracking" th:classappend="${activeItem == 'tracking' ? 'active' : ''}" class="menu-item">
+                <i class="fa-solid fa-route"></i> Live Tracking
+            </a>
+            <a href="/donor/analytics" th:classappend="${activeItem == 'analytics' ? 'active' : ''}" class="menu-item">
+                <i class="fa-solid fa-chart-line"></i> Impact Analytics
+            </a>
+            <a href="/donor/impact" th:classappend="${activeItem == 'impact' ? 'active' : ''}" class="menu-item">
+                <i class="fa-solid fa-trophy"></i> Impact Scoreboard
+            </a>
+        </div>
+
+        <!-- NGO MENU -->
+        <div th:if="${userRole == 'NGO' || userRole == 'SHARED'}" class="sidebar-role-menu" data-menu-role="NGO" th:style="${userRole == 'SHARED' ? 'display: none !important;' : ''}">
+            <a href="/ngo/dashboard" th:classappend="${activeItem == 'dashboard' ? 'active' : ''}" class="menu-item">
+                <i class="fa-solid fa-compass"></i> Mission Control
+            </a>
+            <a href="/ngo/nearby" th:classappend="${activeItem == 'nearby' ? 'active' : ''}" class="menu-item">
+                <i class="fa-solid fa-location-dot"></i> Nearby Donations
+            </a>
+            <a href="/ngo/map" th:classappend="${activeItem == 'map' ? 'active' : ''}" class="menu-item">
+                <i class="fa-solid fa-map-location-dot"></i> Live Map Center
+            </a>
+            <a href="/ngo/mission" th:classappend="${activeItem == 'mission' ? 'active' : ''}" class="menu-item">
+                <i class="fa-solid fa-truck-pickup"></i> Task Center
+            </a>
+            <a href="/ngo/history" th:classappend="${activeItem == 'history' ? 'active' : ''}" class="menu-item">
+                <i class="fa-solid fa-clipboard-check"></i> Rescue History
+            </a>
+            <a href="/ngo/requests" th:classappend="${activeItem == 'requests' ? 'active' : ''}" class="menu-item position-relative">
+                <i class="fa-solid fa-inbox"></i> Donation Requests
+                <span class="position-absolute top-50 end-0 translate-middle-y me-3 badge bg-danger rounded-pill" id="ngo-pending-badge" style="display:none;">!</span>
+            </a>
+            <a href="/ngo/analytics" th:classappend="${activeItem == 'analytics' ? 'active' : ''}" class="menu-item">
+                <i class="fa-solid fa-chart-simple"></i> NGO Analytics
+            </a>
+        </div>
+
+        <!-- ADMIN MENU -->
+        <div th:if="${userRole == 'ADMIN' || userRole == 'SHARED'}" class="sidebar-role-menu" data-menu-role="ADMIN" th:style="${userRole == 'SHARED' ? 'display: none !important;' : ''}">
+            <a href="/admin/dashboard" th:classappend="${activeItem == 'dashboard' ? 'active' : ''}" class="menu-item">
+                <i class="fa-solid fa-shield-halved"></i> Global Insights
+            </a>
+            <a href="/admin/users" th:classappend="${activeItem == 'users' ? 'active' : ''}" class="menu-item">
+                <i class="fa-solid fa-users-gear"></i> User Management
+            </a>
+            <a href="/admin/verification" th:classappend="${activeItem == 'verification' ? 'active' : ''}" class="menu-item">
+                <i class="fa-solid fa-building-circle-check"></i> Verification Queue
+            </a>
+            <a href="/admin/monitoring" th:classappend="${activeItem == 'monitoring' ? 'active' : ''}" class="menu-item">
+                <i class="fa-solid fa-tower-observation"></i> Donation Watch
+            </a>
+            <a href="/admin/analytics" th:classappend="${activeItem == 'analytics' ? 'active' : ''}" class="menu-item">
+                <i class="fa-solid fa-microchip"></i> System Intel
+            </a>
+            <a href="/admin/reports" th:classappend="${activeItem == 'reports' ? 'active' : ''}" class="menu-item">
+                <i class="fa-solid fa-file-invoice-dollar"></i> Fiscal Reports
+            </a>
+        </div>
+
+        <div class="mt-4 pt-4 border-top" style="border-color: rgba(255,255,255,0.05) !important;">
+            <div class="px-3 mb-2 small text-muted text-uppercase fw-bold">Support & Tools</div>
+            <a href="/chat" th:classappend="${activeItem == 'chat' ? 'active' : ''}" class="menu-item">
+                <i class="fa-solid fa-comments"></i> Rescue Chat
+            </a>
+            <a href="/ai/center" th:classappend="${activeItem == 'ai' ? 'active' : ''}" class="menu-item">
+                <i class="fa-solid fa-brain"></i> AI Lab
+            </a>
+            <a href="/help" class="menu-item">
+                <i class="fa-solid fa-circle-question"></i> Help Center
+            </a>
+        </div>
+    </div>
+
+    <!-- Quick Feedback / Action Panel -->
+    <div class="sidebar-footer p-3 border-top" style="border-color: rgba(255,255,255,0.05) !important;">
+        <div class="card bg-dark border-0 p-3 rounded-md" style="background: rgba(255,255,255,0.03) !important;">
+            <div class="d-flex align-items-center gap-2 mb-2">
+                <div class="bg-primary bg-opacity-10 p-2 rounded text-primary">
+                    <i class="fa-solid fa-seedling"></i>
+                </div>
+                <div class="small fw-bold text-white">Impact Level 4</div>
+            </div>
+            <div class="progress mb-2" style="height: 4px; background: rgba(255,255,255,0.1);">
+                <div class="progress-bar bg-primary" role="progressbar" style="width: 75%"></div>
+            </div>
+            <div class="small text-muted">250kg to next level</div>
+        </div>
+    </div>
+    <script>
+        (function initSidebarRoles() {
+            function applySidebarRole(role) {
+                if (!role) return;
+                const normalized = role.toUpperCase().replace('ROLE_', '');
+                document.querySelectorAll('.sidebar-role-menu').forEach(menu => {
+                    const menuRole = menu.getAttribute('data-menu-role');
+                    if (menuRole === normalized) {
+                        menu.style.setProperty('display', 'block', 'important');
+                    } else {
+                        menu.style.setProperty('display', 'none', 'important');
+                    }
+                });
+            }
+
+            function setupSidebar() {
+                if (window.stateManager) {
+                    const currentRole = window.stateManager.getRole();
+                    if (currentRole) {
+                        applySidebarRole(currentRole);
+                    }
+                    window.stateManager.on('userChanged', (user) => {
+                        if (user) applySidebarRole(user.role);
+                    });
+                }
+            }
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', setupSidebar);
+            } else {
+                setupSidebar();
+            }
+        })();
+    </script>
+</aside>

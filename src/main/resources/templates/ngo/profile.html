@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/common :: head('Organization Profile')}"></head>
+<body>
+
+    <div class="app-wrapper">
+        <aside th:replace="~{fragments/sidebar :: sidebar('profile', 'NGO')}"></aside>
+
+        <div class="main-container">
+            <nav th:replace="~{fragments/navbar :: navbar}"></nav>
+
+            <main class="content-body">
+                <div class="mb-5" data-aos="fade-down">
+                    <h2 class="fw-bold mb-1">Organization Management</h2>
+                    <p class="text-muted">Manage your non-profit registration, verification, and contact details.</p>
+                </div>
+
+                <div class="row g-4">
+                    <!-- Left: Org Identity Card -->
+                    <div class="col-lg-4" data-aos="fade-right">
+                        <div class="card-enterprise text-center p-5">
+                            <div class="position-relative d-inline-block mb-4">
+                                <img id="profile-avatar"
+                                     src="https://ui-avatars.com/api/?name=NGO&background=3b82f6&color=fff&size=120"
+                                     class="rounded-pill border border-5 border-light shadow-sm"
+                                     alt="Organization avatar">
+                            </div>
+                            <!-- Populated by JS — no hardcoded values -->
+                            <h4 class="fw-bold mb-1" id="card-org-name">—</h4>
+                            <p class="text-muted small mb-3" id="card-member-since">NGO Partner</p>
+                            <div class="d-flex justify-content-center gap-2 mb-4">
+                                <span id="card-verified-badge"
+                                      class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 px-3 py-2 rounded-pill fw-bold">
+                                    <i class="fa-solid fa-clock me-2"></i>PENDING VERIFICATION
+                                </span>
+                            </div>
+
+                            <div class="p-3 bg-light rounded-4 text-start mb-4">
+                                <h6 class="extra-small text-muted uppercase fw-bold mb-2 ls-1">Verification Status</h6>
+                                <div id="verify-registration"
+                                     class="d-flex align-items-center gap-2 text-secondary small fw-bold mb-2">
+                                    <i class="fa-solid fa-circle-clock"></i> Registration — Pending
+                                </div>
+                                <div class="d-flex align-items-center gap-2 text-primary small fw-bold">
+                                    <i class="fa-solid fa-circle-info"></i> Contact support to expedite review
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Profile Completion -->
+                        <div class="card-enterprise mt-4 p-4">
+                            <h6 class="fw-bold mb-3 uppercase small text-muted ls-1">Profile Completion</h6>
+                            <div class="d-flex justify-content-between small mb-2">
+                                <span>Completion</span>
+                                <span class="fw-bold" id="completion-pct">0%</span>
+                            </div>
+                            <div class="progress mb-4" style="height: 6px;">
+                                <div class="progress-bar bg-primary" id="completion-bar" style="width: 0%"></div>
+                            </div>
+                            <ul class="list-unstyled small d-flex flex-column gap-2 mb-0" id="completion-checklist">
+                                <!-- Populated dynamically -->
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Right: Info Tabs -->
+                    <div class="col-lg-8" data-aos="fade-left">
+                        <div class="card-enterprise p-0 overflow-hidden shadow-sm">
+                            <div class="nav nav-tabs px-4 pt-3 bg-light border-0">
+                                <button class="nav-link active border-0 bg-transparent py-3 fw-bold small uppercase ls-1"
+                                        data-bs-toggle="tab" data-bs-target="#tab-ngo-info">NGO Details</button>
+                                <button class="nav-link border-0 bg-transparent py-3 fw-bold small uppercase ls-1"
+                                        data-bs-toggle="tab" data-bs-target="#tab-ngo-security">Security &amp; Password</button>
+                                <button class="nav-link border-0 bg-transparent py-3 fw-bold small uppercase ls-1"
+                                        data-bs-toggle="tab" data-bs-target="#tab-ngo-prefs">Preferences</button>
+                            </div>
+
+                            <div class="tab-content p-5 bg-white">
+
+                                <!-- NGO Details Tab -->
+                                <div class="tab-pane fade show active" id="tab-ngo-info">
+                                    <form id="profile-form" class="row g-4" onsubmit="saveProfile(event)">
+                                        <div class="col-md-12">
+                                            <label class="form-label small fw-bold text-muted uppercase ls-1">Organization / Charity Name</label>
+                                            <input type="text" id="field-org-name" class="form-control py-2 fs-6"
+                                                   placeholder="Not provided" required>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label small fw-bold text-muted uppercase ls-1">Contact Person Name</label>
+                                            <input type="text" id="field-name" class="form-control py-2 fs-6"
+                                                   placeholder="Not provided" required>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label small fw-bold text-muted uppercase ls-1">Non-Profit EIN / Registration ID</label>
+                                            <input type="text" id="field-reg-id" class="form-control py-2 fs-6"
+                                                   placeholder="Not provided">
+                                        </div>
+                                        <div class="col-md-12">
+                                            <label class="form-label small fw-bold text-muted uppercase ls-1">Primary Email Address</label>
+                                            <input type="email" id="field-email" class="form-control py-2 fs-6" disabled
+                                                   title="Email cannot be changed here">
+                                            <small class="text-muted">Contact support to change your email address.</small>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label small fw-bold text-muted uppercase ls-1">Primary Contact Phone</label>
+                                            <input type="text" id="field-phone" class="form-control py-2 fs-6"
+                                                   placeholder="Not provided">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label small fw-bold text-muted uppercase ls-1">Primary Mission Type</label>
+                                            <select id="field-mission" class="form-select py-2 fs-6">
+                                                <option value="">Select a mission type</option>
+                                                <option value="Hunger Relief &amp; Surplus">Hunger Relief &amp; Surplus</option>
+                                                <option value="Environmental Waste Reduction">Environmental Waste Reduction</option>
+                                                <option value="Community Outreach">Community Outreach</option>
+                                                <option value="Disaster Relief">Disaster Relief</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-12">
+                                            <label class="form-label small fw-bold text-muted uppercase ls-1">Storage / Facility Address</label>
+                                            <textarea id="field-address" class="form-control py-2 fs-6" rows="3"
+                                                      placeholder="Not provided"></textarea>
+                                        </div>
+                                        <div class="col-12 mt-5">
+                                            <button type="submit" id="save-btn" class="btn btn-enterprise btn-enterprise-primary px-5">
+                                                <i class="fa-solid fa-floppy-disk me-2"></i>Save Organization Info
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+
+                                <!-- Security Tab -->
+                                <div class="tab-pane fade" id="tab-ngo-security">
+                                    <form id="password-form" class="row g-4" onsubmit="changePassword(event)">
+                                        <div class="col-12">
+                                            <label class="form-label small fw-bold text-muted uppercase ls-1">Current Password</label>
+                                            <input type="password" id="field-current-pw" class="form-control py-2 fs-6"
+                                                   placeholder="Enter current password" required>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label small fw-bold text-muted uppercase ls-1">New Password</label>
+                                            <input type="password" id="field-new-pw" class="form-control py-2 fs-6"
+                                                   placeholder="At least 6 characters" required minlength="6">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label small fw-bold text-muted uppercase ls-1">Confirm New Password</label>
+                                            <input type="password" id="field-confirm-pw" class="form-control py-2 fs-6"
+                                                   placeholder="Repeat new password" required>
+                                        </div>
+                                        <div class="col-12">
+                                            <button type="submit" class="btn btn-dark px-5">
+                                                <i class="fa-solid fa-lock me-2"></i>Update Password
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+
+                                <!-- Preferences Tab -->
+                                <div class="tab-pane fade" id="tab-ngo-prefs">
+                                    <div class="row g-4">
+                                        <div class="col-12">
+                                            <h6 class="fw-bold mb-3">Notification Preferences</h6>
+                                            <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom">
+                                                <div>
+                                                    <div class="fw-bold small">Email Notifications</div>
+                                                    <p class="small text-muted mb-0">Receive updates about new food donation requests.</p>
+                                                </div>
+                                                <div class="form-check form-switch fs-5">
+                                                    <input class="form-check-input" type="checkbox" id="pref-email" checked>
+                                                </div>
+                                            </div>
+                                            <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom">
+                                                <div>
+                                                    <div class="fw-bold small">In-App Notifications</div>
+                                                    <p class="small text-muted mb-0">Show notifications in the platform dashboard.</p>
+                                                </div>
+                                                <div class="form-check form-switch fs-5">
+                                                    <input class="form-check-input" type="checkbox" id="pref-inapp" checked>
+                                                </div>
+                                            </div>
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <div class="fw-bold small">Dark Mode</div>
+                                                    <p class="small text-muted mb-0">Switch between light and dark themes.</p>
+                                                </div>
+                                                <div class="form-check form-switch fs-5">
+                                                    <input class="form-check-input" type="checkbox" id="pref-dark"
+                                                           onchange="toggleTheme()">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div><!-- tab-content -->
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <nav th:replace="~{fragments/common :: scripts}"></nav>
+    <script>
+        // ── Load profile data from the API ────────────────────────────────────────
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadProfile();
+
+            // Sync dark mode toggle with current theme
+            const isDark = document.body.classList.contains('dark-mode');
+            const darkToggle = document.getElementById('pref-dark');
+            if (darkToggle) darkToggle.checked = isDark;
+        });
+
+        async function loadProfile() {
+            if (!window.api) return;
+            try {
+                const user = await window.api.get('/auth/me');
+                populateCard(user);
+                populateForm(user);
+                updateCompletion(user);
+                sessionStorage.setItem('fr_user', JSON.stringify(user));
+            } catch (err) {
+                console.error('Failed to load profile:', err);
+                if (window.showToast) window.showToast('Could not load profile data. Please refresh.', 'error');
+            }
+        }
+
+        function populateCard(user) {
+            const initials = encodeURIComponent(
+                (user.organizationName || user.name || 'NGO').split(' ').map(w => w[0]).join('').toUpperCase()
+            );
+            const avatar = document.getElementById('profile-avatar');
+            if (avatar) avatar.src = `https://ui-avatars.com/api/?name=${initials}&background=3b82f6&color=fff&size=120`;
+
+            const orgName = user.organizationName || user.name || '—';
+            setText('card-org-name', orgName);
+            setText('card-member-since', 'NGO Partner');
+
+            const badge = document.getElementById('card-verified-badge');
+            if (badge) {
+                if (user.verified) {
+                    badge.className = 'badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-3 py-2 rounded-pill fw-bold';
+                    badge.innerHTML = '<i class="fa-solid fa-certificate me-2"></i>VERIFIED NGO';
+                } else {
+                    badge.className = 'badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 px-3 py-2 rounded-pill fw-bold';
+                    badge.innerHTML = '<i class="fa-solid fa-clock me-2"></i>PENDING VERIFICATION';
+                }
+            }
+
+            const verifyEl = document.getElementById('verify-registration');
+            if (verifyEl) {
+                if (user.verified) {
+                    verifyEl.className = 'd-flex align-items-center gap-2 text-success small fw-bold mb-2';
+                    verifyEl.innerHTML = '<i class="fa-solid fa-circle-check"></i> Registration Verified';
+                } else {
+                    verifyEl.className = 'd-flex align-items-center gap-2 text-warning small fw-bold mb-2';
+                    verifyEl.innerHTML = '<i class="fa-solid fa-circle-clock"></i> Registration Pending';
+                }
+            }
+        }
+
+        function populateForm(user) {
+            setValue('field-name',     user.name                || '');
+            setValue('field-email',    user.email               || '');
+            setValue('field-org-name', user.organizationName    || '');
+            setValue('field-reg-id',   user.legalRegistrationId || '');
+            setValue('field-phone',    user.phone               || '');
+            setValue('field-address',  user.address             || '');
+            // Mission dropdown — try to match saved value
+            const missionSel = document.getElementById('field-mission');
+            if (missionSel) missionSel.value = user.missionType || '';
+        }
+
+        function updateCompletion(user) {
+            const checks = [
+                { label: 'Organization Name', filled: !!user.organizationName },
+                { label: 'Contact Name',      filled: !!user.name },
+                { label: 'Email',             filled: !!user.email },
+                { label: 'Phone Number',      filled: !!user.phone },
+                { label: 'Registration ID',   filled: !!user.legalRegistrationId },
+                { label: 'Facility Address',  filled: !!user.address },
+                { label: 'Account Verified',  filled: !!user.verified }
+            ];
+
+            const done  = checks.filter(c => c.filled).length;
+            const total = checks.length;
+            const pct   = Math.round((done / total) * 100);
+
+            setText('completion-pct', pct + '%');
+            const bar = document.getElementById('completion-bar');
+            if (bar) bar.style.width = pct + '%';
+
+            const list = document.getElementById('completion-checklist');
+            if (list) {
+                list.innerHTML = checks.map(c => `
+                    <li class="${c.filled ? 'text-success' : 'text-muted'}">
+                        <i class="fa-solid ${c.filled ? 'fa-check-circle' : 'fa-circle'} me-2"></i>${c.label}
+                    </li>`).join('');
+            }
+        }
+
+        // ── Save profile ──────────────────────────────────────────────────────────
+        async function saveProfile(event) {
+            event.preventDefault();
+            if (!window.api) return;
+
+            const btn = document.getElementById('save-btn');
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i>Saving…';
+
+            const payload = {
+                name:                getVal('field-name'),
+                phone:               getVal('field-phone'),
+                organizationName:    getVal('field-org-name'),
+                legalRegistrationId: getVal('field-reg-id'),
+                address:             getVal('field-address')
+            };
+
+            try {
+                const updated = await window.api.put('/auth/profile', payload);
+                populateCard(updated);
+                updateCompletion(updated);
+                sessionStorage.setItem('fr_user', JSON.stringify(updated));
+                if (window.showToast) window.showToast('Organization info saved successfully!', 'success');
+            } catch (err) {
+                console.error('Profile save failed:', err);
+                if (window.showToast) window.showToast('Failed to save: ' + err.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        }
+
+        // ── Change password ───────────────────────────────────────────────────────
+        async function changePassword(event) {
+            event.preventDefault();
+            if (!window.api) return;
+
+            const newPw     = getVal('field-new-pw');
+            const confirmPw = getVal('field-confirm-pw');
+
+            if (newPw !== confirmPw) {
+                if (window.showToast) window.showToast('New passwords do not match.', 'error');
+                return;
+            }
+
+            try {
+                await window.api.put('/auth/password', {
+                    currentPassword: getVal('field-current-pw'),
+                    newPassword: newPw
+                });
+                document.getElementById('password-form').reset();
+                if (window.showToast) window.showToast('Password updated successfully!', 'success');
+            } catch (err) {
+                if (window.showToast) window.showToast('Password change failed: ' + err.message, 'error');
+            }
+        }
+
+        // ── Utilities ─────────────────────────────────────────────────────────────
+        function setText(id, text) {
+            const el = document.getElementById(id);
+            if (el) el.textContent = text;
+        }
+        function setValue(id, val) {
+            const el = document.getElementById(id);
+            if (el) el.value = val;
+        }
+        function getVal(id) {
+            const el = document.getElementById(id);
+            return el ? el.value.trim() : '';
+        }
+    </script>
+    <style>
+        .ls-1 { letter-spacing: 0.1em; }
+        .uppercase { text-transform: uppercase; }
+        .extra-small { font-size: 0.65rem; }
+        .nav-tabs .nav-link { color: var(--text-muted); transition: var(--transition); border-bottom: 2px solid transparent !important; }
+        .nav-tabs .nav-link.active { color: var(--primary) !important; border-bottom-color: var(--primary) !important; }
+    </style>
+</body>
+</html>

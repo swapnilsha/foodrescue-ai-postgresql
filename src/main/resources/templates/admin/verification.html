@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/common :: head('Verification Queue')}"></head>
+<body>
+
+    <div class="app-wrapper">
+        <aside th:replace="~{fragments/sidebar :: sidebar('verification', 'ADMIN')}"></aside>
+
+        <div class="main-container">
+            <nav th:replace="~{fragments/navbar :: navbar}"></nav>
+
+            <main class="content-body">
+                <div class="mb-5" data-aos="fade-down">
+                    <h2 class="fw-bold mb-1">Entity Verification Queue</h2>
+                    <p class="text-muted">Review and approve new Donor and NGO registration documents.</p>
+                </div>
+
+                <!-- Summary Tabs -->
+                <ul class="nav nav-pills mb-4 gap-2" data-aos="fade-up">
+                    <li class="nav-item">
+                        <button class="nav-link active bg-dark rounded-pill px-4" data-bs-toggle="pill">Pending Applications <span class="badge bg-danger ms-2" id="pending-count">0</span></button>
+                    </li>
+                </ul>
+
+                <div class="row g-4 overflow-hidden" id="pending-applications-container">
+                    <div class="col-12 text-center py-4 text-muted">
+                        <div class="spinner-border spinner-border-sm text-primary me-2"></div>
+                        Loading pending applications...
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <nav th:replace="~{fragments/common :: scripts}"></nav>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            loadPendingNGOs();
+        });
+
+        async function loadPendingNGOs() {
+            try {
+                const ngos = await window.api.get('/admin/users/pending-verification');
+                renderPendingQueue(ngos);
+            } catch (err) {
+                console.error("Failed to load pending NGOs:", err);
+                const container = document.getElementById('pending-applications-container');
+                if (container) {
+                    container.innerHTML = '<div class="col-12 text-center text-danger py-4 small">Unable to load live data. <button class="btn btn-sm btn-outline-danger ms-2" onclick="loadPendingNGOs()">Retry</button></div>';
+                }
+            }
+        }
+
+        function renderPendingQueue(ngos) {
+            const container = document.getElementById('pending-applications-container');
+            if (!container) return;
+
+            const badge = document.getElementById('pending-count');
+            if (badge) {
+                badge.textContent = ngos.length;
+            }
+
+            if (ngos.length === 0) {
+                container.innerHTML = '<div class="col-12 text-center text-muted py-5">No pending verifications</div>';
+                return;
+            }
+
+            container.innerHTML = ngos.map((ngo, idx) => {
+                const appliedTime = ngo.createdAt ? new Date(ngo.createdAt).toLocaleString() : 'N/A';
+                return `
+                    <div class="col-lg-12" data-aos="fade-up" data-aos-delay="${(idx + 1) * 100}">
+                        <div class="card-enterprise p-0 overflow-hidden shadow-sm border-custom">
+                            <div class="row g-0">
+                                <div class="col-md-3 bg-light p-4 d-flex flex-column justify-content-center align-items-center border-end">
+                                    <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(ngo.name || 'User')}&background=random" class="rounded-pill mb-3" width="80">
+                                    <h6 class="fw-bold mb-1 text-center">${ngo.name || 'User'}</h6>
+                                    <p class="extra-small text-muted mb-0">Registered: ${appliedTime}</p>
+                                </div>
+                                <div class="col-md-6 p-4">
+                                    <div class="row g-3">
+                                        <div class="col-12">
+                                            <h6 class="small fw-bold text-muted uppercase ls-1 mb-2">Registration Information</h6>
+                                            <div class="d-flex flex-wrap gap-2">
+                                                <div class="p-2 bg-light rounded border small d-flex align-items-center gap-2">
+                                                    <i class="fa-solid fa-envelope text-primary"></i> ${ngo.email}
+                                                </div>
+                                                <div class="p-2 bg-light rounded border small d-flex align-items-center gap-2">
+                                                    <i class="fa-solid fa-phone text-primary"></i> ${ngo.phone || 'No Phone provided'}
+                                                </div>
+                                                <div class="p-2 bg-light rounded border small d-flex align-items-center gap-2">
+                                                    <i class="fa-solid fa-id-card text-primary"></i> Role: ${ngo.role.replace('ROLE_', '')}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-12 mt-4 pt-3 border-top">
+                                            <div class="row g-3">
+                                                <div class="col-md-6">
+                                                    <div class="extra-small text-muted uppercase fw-bold">Verification Status</div>
+                                                    <div class="small fw-bold text-warning">Pending Admin Review</div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="extra-small text-muted uppercase fw-bold">User ID</div>
+                                                    <div class="small fw-bold">#USR-${ngo.id}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 p-4 bg-light bg-opacity-50 d-flex flex-column justify-content-center gap-2 border-start">
+                                    <button onclick="approveNGO(${ngo.id})" class="btn btn-enterprise btn-enterprise-primary w-100 fw-bold py-2">Approve Entity</button>
+                                    <div class="d-flex gap-2">
+                                        <button onclick="rejectNGO(${ngo.id})" class="btn btn-outline-danger btn-sm flex-fill fw-bold py-2">Reject</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function approveNGO(userId) {
+            if (!window.api) return;
+            try {
+                await window.api.patch(`/admin/users/${userId}/verify`, { verified: true });
+                if (window.showToast) window.showToast('User approved and verified successfully.', 'success');
+                await loadPendingNGOs();
+            } catch (err) {
+                console.error("Failed to approve user:", err);
+                if (window.showToast) window.showToast('Failed to approve user: ' + err.message, 'error');
+            }
+        }
+
+        async function rejectNGO(userId) {
+            if (!window.api) return;
+            if (!confirm("Are you sure you want to reject and delete this application?")) return;
+            try {
+                await window.api.delete(`/admin/users/${userId}`);
+                if (window.showToast) window.showToast('User application rejected and deleted.', 'success');
+                await loadPendingNGOs();
+            } catch (err) {
+                console.error("Failed to reject user:", err);
+                if (window.showToast) window.showToast('Failed to reject user: ' + err.message, 'error');
+            }
+        }
+    </script>
+    <style>
+        .ls-1 { letter-spacing: 0.1em; }
+        .uppercase { text-transform: uppercase; }
+        .extra-small { font-size: 0.65rem; }
+    </style>
+</body>
+</html>

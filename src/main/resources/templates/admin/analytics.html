@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/common :: head('System Analytics')}"></head>
+<body>
+
+    <div class="app-wrapper">
+        <aside th:replace="~{fragments/sidebar :: sidebar('analytics', 'ADMIN')}"></aside>
+
+        <div class="main-container">
+            <nav th:replace="~{fragments/navbar :: navbar}"></nav>
+
+            <main class="content-body">
+                <div class="mb-5 d-flex justify-content-between align-items-end" data-aos="fade-down">
+                    <div>
+                        <h2 class="fw-bold mb-1">Global Platform Analytics</h2>
+                        <p class="text-muted">High-level insights into platform growth, waste reduction, and network density.</p>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-outline-dark" id="admin-export-report-btn" onclick="exportPlatformReport()" aria-label="Export platform analytics report">
+                            <i class="fa-solid fa-file-arrow-down me-2" aria-hidden="true"></i>Export Report
+                        </button>
+                    </div>
+                </div>
+
+                <div class="row g-4">
+                    <div class="col-lg-12" data-aos="fade-up">
+                        <div class="card-enterprise">
+                            <h5 class="fw-bold mb-4">Total Food Rescued vs. Target (Year to Date)</h5>
+                            <div class="chart-container" style="height: 350px;">
+                                <canvas id="globalTargetChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6" data-aos="fade-up">
+                        <div class="card-enterprise">
+                            <h5 class="fw-bold mb-4">Regional NGO Density</h5>
+                            <div class="chart-container" style="height: 300px;">
+                                <canvas id="densityChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6" data-aos="fade-up" data-aos-delay="100">
+                        <div class="card-enterprise">
+                            <h5 class="fw-bold mb-4">Wasted vs. Rescued Ratio</h5>
+                            <div class="chart-container" style="height: 300px;">
+                                <canvas id="ratioChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <nav th:replace="~{fragments/common :: scripts}"></nav>
+    <script>
+        let targetChart = null;
+        let densityChart = null;
+        let ratioChart = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadAnalyticsData();
+        });
+
+        async function loadAnalyticsData() {
+            if (!window.api) return;
+            try {
+                const data = await window.api.get('/admin/analytics/stats');
+                renderCharts(data);
+            } catch (err) {
+                console.error("Failed to load analytics stats:", err);
+                if (window.showToast) window.showToast('Could not load analytics statistics.', 'error');
+                document.querySelectorAll('.chart-container').forEach(container => {
+                    container.innerHTML = `
+                        <div class="h-100 d-flex flex-column justify-content-center align-items-center text-danger">
+                            <span class="small mb-2">Unable to load live data.</span>
+                            <button class="btn btn-sm btn-outline-danger" onclick="loadAnalyticsData()">Retry</button>
+                        </div>`;
+                });
+            }
+        }
+
+        function renderCharts(data) {
+            // 1. globalTargetChart (Line Chart)
+            const targetContainer = document.getElementById('globalTargetChart').parentElement;
+            const rescuedSum = data.rescuedQty.reduce((a, b) => a + b, 0);
+            if (rescuedSum === 0) {
+                targetContainer.innerHTML = '<div class="h-100 d-flex align-items-center justify-content-center text-muted small">No rescue data available for this period.</div>';
+            } else {
+                targetContainer.innerHTML = '<canvas id="globalTargetChart"></canvas>';
+                const ctxTarget = document.getElementById('globalTargetChart').getContext('2d');
+                if (targetChart) targetChart.destroy();
+                targetChart = new Chart(ctxTarget, {
+                    type: 'line',
+                    data: {
+                        labels: data.months,
+                        datasets: [
+                            { label: 'Actual Rescue (kg)', data: data.rescuedQty, borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.1)', fill: true, tension: 0.4, borderWidth: 3 },
+                            { label: 'Target (kg)', data: data.targetQty, borderColor: '#94a3b8', borderDash: [5, 5], fill: false, tension: 0.4, borderWidth: 2 }
+                        ]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } } }
+                });
+            }
+
+            // 2. densityChart (Bar Chart)
+            const densityContainer = document.getElementById('densityChart').parentElement;
+            const cities = Object.keys(data.density || {});
+            if (cities.length === 0) {
+                densityContainer.innerHTML = '<div class="h-100 d-flex align-items-center justify-content-center text-muted small">No active NGOs registered.</div>';
+            } else {
+                densityContainer.innerHTML = '<canvas id="densityChart"></canvas>';
+                const ctxDensity = document.getElementById('densityChart').getContext('2d');
+                if (densityChart) densityChart.destroy();
+                densityChart = new Chart(ctxDensity, {
+                    type: 'bar',
+                    data: {
+                        labels: cities,
+                        datasets: [{
+                            label: 'Active NGOs',
+                            data: Object.values(data.density),
+                            backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444', '#06b6d4'],
+                            borderRadius: 6
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            x: { grid: { display: false }, border: { display: false } },
+                            y: { grid: { color: 'rgba(0,0,0,0.05)' }, border: { display: false } }
+                        }
+                    }
+                });
+            }
+
+            // 3. ratioChart (Pie Chart)
+            const ratioContainer = document.getElementById('ratioChart').parentElement;
+            if (data.totalRescuedKg === 0 && data.totalWastedKg === 0) {
+                ratioContainer.innerHTML = '<div class="h-100 d-flex align-items-center justify-content-center text-muted small">No analytics data available.</div>';
+            } else {
+                ratioContainer.innerHTML = '<canvas id="ratioChart"></canvas>';
+                const ctxRatio = document.getElementById('ratioChart').getContext('2d');
+                if (ratioChart) ratioChart.destroy();
+                ratioChart = new Chart(ctxRatio, {
+                    type: 'pie',
+                    data: {
+                        labels: ['Rescued', 'Wasted'],
+                        datasets: [{ data: [data.totalRescuedKg, data.totalWastedKg], backgroundColor: ['#10b981', '#ef4444'], borderWidth: 0 }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+                });
+            }
+        }
+
+        function exportPlatformReport() {
+            if (window.showToast) window.showToast('Please use the Fiscal Reports Center to generate dynamic CSV data files.', 'info');
+        }
+    </script>
+</body>
+</html>

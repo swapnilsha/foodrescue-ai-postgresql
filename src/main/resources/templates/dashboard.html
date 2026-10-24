@@ -1,0 +1,1336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FoodRescue AI - Enterprise Platform</title>
+    
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        /* === ENTERPRISE DESIGN TOKENS === */
+        :root {
+            /* Light Theme */
+            --primary-color: #10b981; /* Emerald Green */
+            --primary-dark: #059669;
+            --secondary-color: #3b82f6; /* Blue */
+            --bg-color: #f8fafc;
+            --surface-color: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+            --sidebar-bg: #1e293b;
+            --sidebar-text: #cbd5e1;
+            --sidebar-active: #0f172a;
+            --sidebar-active-border: #10b981;
+            
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            
+            --border-radius: 12px;
+            --transition-speed: 0.3s;
+        }
+
+        /* Dark Theme overrides */
+        body.dark-mode {
+            --bg-color: #0f172a;
+            --surface-color: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-color: #334155;
+            --sidebar-bg: #0b1120;
+            --sidebar-active: #1e293b;
+        }
+
+        /* === GLOBAL STYLES === */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            transition: background-color var(--transition-speed), color var(--transition-speed);
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+
+        /* Typography & Utilities */
+        h1, h2, h3, h4, h5, h6 { font-weight: 600; color: var(--text-main); }
+        .text-muted-custom { color: var(--text-muted) !important; }
+        .bg-surface { background-color: var(--surface-color) !important; }
+        .border-custom { border-color: var(--border-color) !important; }
+        .rounded-custom { border-radius: var(--border-radius) !important; }
+
+        /* Glassmorphism */
+        .glass-card {
+            background: rgba(var(--surface-color), 0.7);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-sm);
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        body.dark-mode ::-webkit-scrollbar-thumb { background: #475569; }
+
+        /* === LOGIN VIEW === */
+        #auth-view {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+        }
+        body.dark-mode #auth-view {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        }
+        .login-card {
+            max-width: 450px;
+            width: 100%;
+            padding: 2.5rem;
+            background-color: var(--surface-color);
+            border-radius: 20px;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--border-color);
+        }
+        .btn-primary-custom {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            color: #fff;
+            font-weight: 500;
+            padding: 0.6rem 1.2rem;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+        .btn-primary-custom:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+        .role-selector-btn {
+            border: 1px solid var(--border-color);
+            background: transparent;
+            color: var(--text-main);
+            border-radius: 8px;
+            padding: 10px;
+            width: 32%;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+        .role-selector-btn:hover, .role-selector-btn.active {
+            border-color: var(--primary-color);
+            background-color: rgba(16, 185, 129, 0.1);
+            color: var(--primary-color);
+        }
+
+        /* === DASHBOARD LAYOUT === */
+        #dashboard-layout {
+            display: none; /* Hidden until login */
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        /* Sidebar */
+        #sidebar {
+            width: 260px;
+            background-color: var(--sidebar-bg);
+            color: var(--sidebar-text);
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            z-index: 1000;
+            transition: transform var(--transition-speed) ease;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid var(--border-color);
+        }
+        .sidebar-header {
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .sidebar-brand {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #fff;
+            text-decoration: none;
+            letter-spacing: -0.5px;
+        }
+        .sidebar-brand i { color: var(--primary-color); }
+        .sidebar-menu {
+            flex: 1;
+            padding: 1rem 0;
+            overflow-y: auto;
+        }
+        .sidebar-item {
+            padding: 0.75rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: var(--sidebar-text);
+            text-decoration: none;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+        }
+        .sidebar-item:hover, .sidebar-item.active {
+            background-color: var(--sidebar-active);
+            color: #fff;
+            border-left-color: var(--sidebar-active-border);
+        }
+        .sidebar-item i { width: 20px; text-align: center; font-size: 1.1rem; }
+
+        /* Main Wrapper */
+        #main-wrapper {
+            margin-left: 260px;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            transition: margin-left var(--transition-speed) ease;
+            background-color: var(--bg-color);
+        }
+
+        /* Navbar */
+        #navbar {
+            height: 70px;
+            background-color: var(--surface-color);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 2rem;
+            z-index: 900;
+            backdrop-filter: blur(10px);
+        }
+        .nav-actions { display: flex; align-items: center; gap: 1rem; }
+        .icon-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.2rem;
+            position: relative;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 50%;
+            transition: all 0.2s;
+        }
+        .icon-btn:hover { background-color: var(--bg-color); color: var(--primary-color); }
+        .badge-notification {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            background-color: #ef4444;
+            color: white;
+            font-size: 0.6rem;
+            padding: 2px 5px;
+            border-radius: 10px;
+            border: 2px solid var(--surface-color);
+        }
+        .profile-dropdown { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+        .profile-img { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; }
+        .profile-info { display: flex; flex-direction: column; line-height: 1.2; }
+        .profile-name { font-size: 0.9rem; font-weight: 600; color: var(--text-main); }
+        .profile-role { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; }
+
+        /* Content Area */
+        #main-content {
+            flex: 1;
+            padding: 2rem;
+            overflow-y: auto;
+        }
+
+        /* === DASHBOARD COMPONENTS === */
+        /* Stat Cards */
+        .stat-card {
+            background-color: var(--surface-color);
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-sm);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: transform 0.2s;
+        }
+        .stat-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
+        .stat-info h6 { margin: 0; font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;}
+        .stat-info h3 { margin: 8px 0 0; font-size: 1.8rem; font-weight: 700; color: var(--text-main); }
+        .stat-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+        .icon-green { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+        .icon-blue { background: rgba(59, 130, 246, 0.1); color: #3b82f6; }
+        .icon-orange { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
+        .icon-purple { background: rgba(139, 92, 246, 0.1); color: #8b5cf6; }
+        
+        .trend-up { color: #10b981; font-size: 0.85rem; font-weight: 500; }
+        .trend-down { color: #ef4444; font-size: 0.85rem; font-weight: 500; }
+
+        /* Tables */
+        .custom-table-container {
+            background-color: var(--surface-color);
+            border-radius: var(--border-radius);
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+        }
+        .table { margin-bottom: 0; color: var(--text-main); }
+        .table th {
+            background-color: var(--bg-color);
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            font-weight: 600;
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 1.5rem;
+        }
+        .table td {
+            padding: 1rem 1.5rem;
+            vertical-align: middle;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-main);
+        }
+        .badge-status { padding: 5px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; }
+        .badge-available { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+        .badge-pending { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
+        .badge-completed { background: rgba(59, 130, 246, 0.1); color: #3b82f6; }
+        
+        /* Charts Container */
+        .chart-container {
+            background-color: var(--surface-color);
+            border-radius: var(--border-radius);
+            border: 1px solid var(--border-color);
+            padding: 1.5rem;
+            height: 100%;
+        }
+
+        /* Mission Cards (NGO) */
+        .mission-card {
+            background-color: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            position: relative;
+            overflow: hidden;
+        }
+        .mission-card::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 4px;
+            background-color: var(--primary-color);
+        }
+        .mission-card.urgent::before { background-color: #ef4444; }
+
+        /* AI Assistant Chat */
+        #ai-chat-widget {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 1050;
+        }
+        .chat-btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            border: none;
+            box-shadow: var(--shadow-lg);
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: transform 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .chat-btn:hover { transform: scale(1.05); }
+        .chat-window {
+            position: absolute;
+            bottom: 80px;
+            right: 0;
+            width: 350px;
+            height: 450px;
+            background-color: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-lg);
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .chat-header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 1rem;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+        }
+        .chat-body {
+            flex: 1;
+            padding: 1rem;
+            overflow-y: auto;
+            background-color: var(--bg-color);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .chat-msg {
+            max-width: 80%;
+            padding: 10px 15px;
+            border-radius: 12px;
+            font-size: 0.9rem;
+        }
+        .msg-ai { background-color: var(--surface-color); border: 1px solid var(--border-color); color: var(--text-main); align-self: flex-start; border-bottom-left-radius: 0;}
+        .msg-user { background-color: var(--primary-color); color: white; align-self: flex-end; border-bottom-right-radius: 0;}
+        .chat-input {
+            padding: 1rem;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            gap: 10px;
+            background-color: var(--surface-color);
+        }
+        .chat-input input {
+            flex: 1;
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 8px 15px;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            outline: none;
+        }
+
+        /* Notifications Toast */
+        #toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 2000;
+        }
+        .custom-toast {
+            background-color: var(--surface-color);
+            border-left: 4px solid var(--primary-color);
+            color: var(--text-main);
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: var(--shadow-lg);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 300px;
+            animation: slideIn 0.3s ease forwards;
+        }
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        /* Search input */
+        .search-box {
+            position: relative;
+            width: 300px;
+        }
+        .search-box input {
+            width: 100%;
+            padding: 8px 15px 8px 35px;
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-size: 0.9rem;
+        }
+        .search-box i {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+        }
+
+        /* Modals */
+        .modal-content {
+            background-color: var(--surface-color);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+        }
+        .modal-header { border-bottom-color: var(--border-color); }
+        .modal-footer { border-top-color: var(--border-color); }
+        .form-control, .form-select {
+            background-color: var(--bg-color);
+            border-color: var(--border-color);
+            color: var(--text-main);
+        }
+        .form-control:focus, .form-select:focus {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.25rem rgba(16, 185, 129, 0.25);
+        }
+
+        /* Mobile Responsiveness */
+        #mobile-menu-btn { display: none; }
+        @media (max-width: 992px) {
+            #sidebar { transform: translateX(-100%); }
+            #sidebar.show { transform: translateX(0); }
+            #main-wrapper { margin-left: 0; }
+            #mobile-menu-btn { display: block; }
+            .search-box { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 1. LOGIN VIEW -->
+    <div id="auth-view">
+        <div class="login-card">
+            <div class="text-center mb-4">
+                <div class="d-inline-flex align-items-center justify-content-center bg-success text-white rounded-circle mb-3" style="width: 60px; height: 60px; font-size: 1.8rem;">
+                    <i class="fa-solid fa-leaf"></i>
+                </div>
+                <h3 class="mb-1">FoodRescue AI</h3>
+                <p class="text-muted-custom">Sign in to your enterprise account</p>
+            </div>
+            
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                <div class="mb-3">
+                    <label class="form-label text-muted-custom small fw-bold">EMAIL ADDRESS</label>
+                    <input type="email" class="form-control" id="email" value="demo@foodrescue.org" required>
+                </div>
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between">
+                        <label class="form-label text-muted-custom small fw-bold">PASSWORD</label>
+                        <a href="#" class="small text-decoration-none" style="color: var(--primary-color);">Forgot?</a>
+                    </div>
+                    <input type="password" class="form-control" id="password" value="password123" required>
+                </div>
+                
+                <div class="mb-4">
+                    <label class="form-label text-muted-custom small fw-bold mb-2">SELECT ROLE (DEMO)</label>
+                    <div class="d-flex justify-content-between">
+                        <button type="button" class="role-selector-btn active" onclick="selectRole(this, 'DONOR')">
+                            <i class="fa-solid fa-hand-holding-heart mb-1 d-block"></i> Donor
+                        </button>
+                        <button type="button" class="role-selector-btn" onclick="selectRole(this, 'NGO')">
+                            <i class="fa-solid fa-truck-fast mb-1 d-block"></i> NGO
+                        </button>
+                        <button type="button" class="role-selector-btn" onclick="selectRole(this, 'ADMIN')">
+                            <i class="fa-solid fa-shield-halved mb-1 d-block"></i> Admin
+                        </button>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary-custom w-100 py-2">Sign In to Dashboard</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 2. MAIN DASHBOARD SHELL -->
+    <div id="dashboard-layout">
+        
+        <!-- Sidebar -->
+        <aside id="sidebar">
+            <div class="sidebar-header">
+                <div class="d-flex align-items-center justify-content-center bg-success text-white rounded" style="width: 32px; height: 32px;">
+                    <i class="fa-solid fa-leaf" style="color: white; font-size: 0.9rem;"></i>
+                </div>
+                <a href="#" class="sidebar-brand">FoodRescue<span style="color:var(--primary-color)">AI</span></a>
+            </div>
+            
+            <!-- Dynamic Menu Items -->
+            <nav class="sidebar-menu" id="sidebar-menu">
+                <!-- Rendered via JS -->
+            </nav>
+
+            <div class="p-3 border-top" style="border-color: rgba(255,255,255,0.05) !important;">
+                <a href="#" class="sidebar-item" onclick="logout()">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i> Sign Out
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Wrapper -->
+        <div id="main-wrapper">
+            <!-- Navbar -->
+            <header id="navbar">
+                <div class="d-flex align-items-center gap-3">
+                    <button class="icon-btn" id="mobile-menu-btn" onclick="toggleSidebar()">
+                        <i class="fa-solid fa-bars"></i>
+                    </button>
+                    <div class="search-box">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" placeholder="Global Search (Donations, NGOs, Reports)...">
+                    </div>
+                </div>
+
+                <div class="nav-actions">
+                    <button class="icon-btn" onclick="toggleTheme()" title="Toggle Dark Mode">
+                        <i class="fa-solid fa-moon" id="theme-icon"></i>
+                    </button>
+                    <button class="icon-btn" onclick="showNotifications()" title="Notifications">
+                        <i class="fa-regular fa-bell"></i>
+                        <span class="badge-notification">3</span>
+                    </button>
+                    <div class="ms-3 ps-3 border-start border-custom profile-dropdown">
+                        <img src="https://ui-avatars.com/api/?name=User&background=10b981&color=fff" alt="Profile" class="profile-img" id="user-avatar">
+                        <div class="profile-info d-none d-md-flex">
+                            <span class="profile-name" id="user-name">Loading...</span>
+                            <span class="profile-role" id="user-role">Role</span>
+                        </div>
+                        <i class="fa-solid fa-chevron-down text-muted ms-2" style="font-size: 0.8rem;"></i>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Dynamic Content Area -->
+            <main id="main-content">
+                <!-- Rendered via JS based on role -->
+            </main>
+        </div>
+    </div>
+
+    <!-- 3. AI CHAT WIDGET -->
+    <div id="ai-chat-widget" style="display: none;">
+        <div class="chat-window" id="chat-window">
+            <div class="chat-header">
+                <div><i class="fa-solid fa-robot"></i> AI Rescue Assistant</div>
+                <i class="fa-solid fa-xmark" style="cursor: pointer;" onclick="toggleChat()"></i>
+            </div>
+            <div class="chat-body" id="chat-messages">
+                <div class="chat-msg msg-ai">Hello! I'm your AI Assistant. I can analyze food images, predict expiry times, or help you generate impact reports. How can I assist you today?</div>
+            </div>
+            <div class="chat-input">
+                <input type="text" id="chat-input-field" placeholder="Ask AI something..." onkeypress="handleChatKeyPress(event)">
+                <button class="btn btn-primary-custom" onclick="sendChatMessage()"><i class="fa-solid fa-paper-plane"></i></button>
+            </div>
+        </div>
+        <button class="chat-btn" onclick="toggleChat()">
+            <i class="fa-solid fa-sparkles"></i>
+        </button>
+    </div>
+
+    <!-- 4. MODALS -->
+    <!-- Upload Food Modal (Donor) -->
+    <div class="modal fade" id="uploadFoodModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content glass-card">
+                <div class="modal-header border-custom">
+                    <h5 class="modal-title"><i class="fa-solid fa-cloud-arrow-up text-primary me-2"></i> Upload Food Donation</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-12">
+                            <div class="p-4 border border-dashed rounded text-center mb-3 border-custom" style="background: rgba(16,185,129,0.05);">
+                                <i class="fa-solid fa-camera mb-2" style="font-size: 2rem; color: var(--primary-color);"></i>
+                                <h6>Upload Food Image for AI Analysis</h6>
+                                <p class="small text-muted-custom">AI will automatically estimate quantity, freshness, and expiry.</p>
+                                <button class="btn btn-sm btn-outline-success">Browse Files</button>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-muted-custom">FOOD TITLE</label>
+                            <input type="text" class="form-control" placeholder="e.g. 50 Fresh Sandwiches">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-muted-custom">CATEGORY</label>
+                            <select class="form-select">
+                                <option>Cooked Food</option>
+                                <option>Fresh Produce</option>
+                                <option>Packaged Goods</option>
+                                <option>Baked Goods</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-muted-custom">EST. QUANTITY (KG)</label>
+                            <input type="number" class="form-control" placeholder="0.0">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-muted-custom">HOURS UNTIL EXPIRY</label>
+                            <input type="number" class="form-control" placeholder="24">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-custom">
+                    <button type="button" class="btn btn-light border" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary-custom" onclick="submitDonation()" data-bs-dismiss="modal">Submit Donation</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toast-container"></div>
+
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- === APPLICATION LOGIC === -->
+    <script>
+        // --- 1. STATE & DATA ---
+        let selectedRole = 'DONOR';
+        const state = {
+            isLoggedIn: false,
+            user: null,
+            theme: localStorage.getItem('theme') || 'light',
+            charts: [] // Store chart instances to destroy them before re-rendering
+        };
+
+        // Mock Data
+        const db = {
+            donations: [
+                { id: "DON-1042", title: "Organic Vegetables", category: "Produce", qty: "45 kg", freshness: "92%", expiry: "48h", ngo: "Green Earth NGO", status: "PENDING" },
+                { id: "DON-1041", title: "Buffet Leftovers", category: "Cooked", qty: "20 kg", freshness: "75%", expiry: "8h", ngo: "City Shelter", status: "ACCEPTED" },
+                { id: "DON-1040", title: "Bakery Bread", category: "Baked", qty: "15 kg", freshness: "88%", expiry: "24h", ngo: "Food Bank Central", status: "COMPLETED" },
+                { id: "DON-1039", title: "Canned Soups", category: "Packaged", qty: "100 kg", freshness: "99%", expiry: "6mo", ngo: "-", status: "AVAILABLE" }
+            ],
+            missions: [
+                { title: "Urgent: Cooked Meals", loc: "Downtown Grand Hotel", dist: "2.4 km", time: "15 mins", type: "urgent" },
+                { title: "Fresh Produce Pickup", loc: "Sunrise Supermarket", dist: "5.1 km", time: "25 mins", type: "normal" }
+            ]
+        };
+
+        // Menus per role
+        const menus = {
+            DONOR: [
+                { icon: 'fa-chart-pie', text: 'Dashboard Overview', active: true },
+                { icon: 'fa-cloud-arrow-up', text: 'Upload Food', action: 'showUploadModal' },
+                { icon: 'fa-clock-rotate-left', text: 'Donation History' },
+                { icon: 'fa-chart-line', text: 'Impact Analytics' },
+                { icon: 'fa-file-invoice', text: 'Tax Receipts' },
+                { icon: 'fa-gear', text: 'Settings' }
+            ],
+            NGO: [
+                { icon: 'fa-compass', text: 'Mission Control', active: true },
+                { icon: 'fa-map-location-dot', text: 'Live Map View' },
+                { icon: 'fa-clipboard-check', text: 'Accepted Requests' },
+                { icon: 'fa-truck-ramp-box', text: 'Collection History' },
+                { icon: 'fa-chart-simple', text: 'Performance Reports' },
+                { icon: 'fa-gear', text: 'Organization Settings' }
+            ],
+            ADMIN: [
+                { icon: 'fa-shield-halved', text: 'System Overview', active: true },
+                { icon: 'fa-users', text: 'User Management' },
+                { icon: 'fa-building-ngo', text: 'NGO Verification' },
+                { icon: 'fa-database', text: 'Donation Audit Logs' },
+                { icon: 'fa-brain', text: 'AI Command Center' },
+                { icon: 'fa-gears', text: 'System Settings' }
+            ]
+        };
+
+        // --- 2. INITIALIZATION ---
+        document.addEventListener("DOMContentLoaded", () => {
+            applyTheme(state.theme);
+        });
+
+        function toggleTheme() {
+            state.theme = state.theme === 'light' ? 'dark' : 'light';
+            localStorage.setItem('theme', state.theme);
+            applyTheme(state.theme);
+            if(state.isLoggedIn) renderDashboard(); // Re-render charts for theme colors
+        }
+
+        function applyTheme(theme) {
+            if (theme === 'dark') {
+                document.body.classList.add('dark-mode');
+                document.getElementById('theme-icon').classList.replace('fa-moon', 'fa-sun');
+            } else {
+                document.body.classList.remove('dark-mode');
+                document.getElementById('theme-icon').classList.replace('fa-sun', 'fa-moon');
+            }
+            Chart.defaults.color = theme === 'dark' ? '#94a3b8' : '#64748b';
+            Chart.defaults.borderColor = theme === 'dark' ? '#334155' : '#e2e8f0';
+        }
+
+        // --- 3. AUTHENTICATION FLOW ---
+        function selectRole(btn, role) {
+            document.querySelectorAll('.role-selector-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            selectedRole = role;
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            
+            // Setup User State
+            state.isLoggedIn = true;
+            state.role = selectedRole;
+            state.user = {
+                name: state.role === 'DONOR' ? 'City Grand Hotel' : state.role === 'NGO' ? 'Green Earth Rescue' : 'System Admin',
+                email: email
+            };
+
+            // Transition UI
+            document.getElementById('auth-view').style.display = 'none';
+            document.getElementById('dashboard-layout').style.display = 'block';
+            document.getElementById('ai-chat-widget').style.display = 'block';
+
+            // Populate Navbar
+            document.getElementById('user-name').innerText = state.user.name;
+            document.getElementById('user-role').innerText = state.role;
+            document.getElementById('user-avatar').src = `https://ui-avatars.com/api/?name=${encodeURIComponent(state.user.name)}&background=10b981&color=fff`;
+
+            // Build UI
+            buildSidebar();
+            renderDashboard();
+
+            showToast("Welcome back!", `Logged in successfully as ${state.role}`);
+            
+            // Mock Real-time WebSocket connection
+            setTimeout(() => {
+                showToast("Real-time Connected", "WebSocket notifications active.", "fa-bolt", "text-warning");
+            }, 2000);
+        }
+
+        function logout() {
+            state.isLoggedIn = false;
+            document.getElementById('dashboard-layout').style.display = 'none';
+            document.getElementById('ai-chat-widget').style.display = 'none';
+            document.getElementById('auth-view').style.display = 'flex';
+        }
+
+        // --- 4. LAYOUT BUILDERS ---
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('show');
+        }
+
+        function buildSidebar() {
+            const menuContainer = document.getElementById('sidebar-menu');
+            const items = menus[state.role];
+            let html = '';
+            
+            items.forEach(item => {
+                const action = item.action ? `onclick="${item.action}()"` : `onclick="handleNavClick(this)"`;
+                const active = item.active ? 'active' : '';
+                html += `
+                    <a href="#" class="sidebar-item ${active}" ${action}>
+                        <i class="fa-solid ${item.icon}"></i> ${item.text}
+                    </a>
+                `;
+            });
+            
+            menuContainer.innerHTML = html;
+        }
+
+        function handleNavClick(element) {
+            document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
+            element.classList.add('active');
+            // In a real SPA, this would route to a different view. We just re-render dashboard for demo.
+            renderDashboard(); 
+        }
+
+        function showUploadModal() {
+            new bootstrap.Modal(document.getElementById('uploadFoodModal')).show();
+        }
+
+        function submitDonation() {
+            showToast("AI Processing...", "Analyzing food image and calculating freshness.", "fa-robot", "text-primary");
+            setTimeout(() => {
+                showToast("Donation Listed!", "Food added to marketplace. NGOs notified.", "fa-check-circle", "text-success");
+            }, 1500);
+        }
+
+        // --- 5. DASHBOARD RENDERERS ---
+        function renderDashboard() {
+            const content = document.getElementById('main-content');
+            // Clear existing charts
+            state.charts.forEach(c => c.destroy());
+            state.charts = [];
+
+            if (state.role === 'DONOR') {
+                content.innerHTML = getDonorHtml();
+                setTimeout(() => {
+                    renderBarChart('donorChart', 'Monthly Donations (kg)', [420, 550, 480, 610, 750, 850]);
+                }, 100);
+            } else if (state.role === 'NGO') {
+                content.innerHTML = getNgoHtml();
+                setTimeout(() => {
+                    renderLineChart('ngoChart', 'Collections per Week', [12, 19, 15, 25, 22, 30]);
+                }, 100);
+            } else if (state.role === 'ADMIN') {
+                content.innerHTML = getAdminHtml();
+                setTimeout(() => {
+                    renderDoughnutChart('adminChart1', 'Users by Role', [1250, 320, 15]);
+                    renderBarChart('adminChart2', 'Platform Growth (Users)', [100, 250, 400, 650, 1000, 1585]);
+                }, 100);
+            }
+        }
+
+        // --- HTML TEMPLATES FOR EACH ROLE ---
+
+        function getDonorHtml() {
+            return `
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h4 class="mb-1">Donor Dashboard</h4>
+                        <p class="text-muted-custom small mb-0">Track your impact and manage donations.</p>
+                    </div>
+                    <button class="btn btn-primary-custom" onclick="showUploadModal()">
+                        <i class="fa-solid fa-plus me-2"></i> New Donation
+                    </button>
+                </div>
+
+                <!-- Stats Row -->
+                <div class="row g-4 mb-4">
+                    <div class="col-md-3">
+                        <div class="stat-card">
+                            <div class="stat-info">
+                                <h6>Total Donations</h6>
+                                <h3>1,450</h3>
+                                <span class="trend-up"><i class="fa-solid fa-arrow-trend-up"></i> +12% this month</span>
+                            </div>
+                            <div class="stat-icon icon-green"><i class="fa-solid fa-box-open"></i></div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-card">
+                            <div class="stat-info">
+                                <h6>Food Saved (KG)</h6>
+                                <h3>8,500.5</h3>
+                                <span class="trend-up"><i class="fa-solid fa-arrow-trend-up"></i> +450kg this week</span>
+                            </div>
+                            <div class="stat-icon icon-blue"><i class="fa-solid fa-scale-balanced"></i></div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-card">
+                            <div class="stat-info">
+                                <h6>People Helped</h6>
+                                <h3>25,000+</h3>
+                                <span class="text-muted-custom" style="font-size:0.85rem">Estimated meals</span>
+                            </div>
+                            <div class="stat-icon icon-orange"><i class="fa-solid fa-users"></i></div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-card">
+                            <div class="stat-info">
+                                <h6>CO₂ Reduced</h6>
+                                <h3>12.4 Tons</h3>
+                                <span class="text-muted-custom" style="font-size:0.85rem">AI calculated impact</span>
+                            </div>
+                            <div class="stat-icon icon-purple"><i class="fa-solid fa-leaf"></i></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chart & AI Insights -->
+                <div class="row g-4 mb-4">
+                    <div class="col-lg-8">
+                        <div class="chart-container">
+                            <h6 class="mb-4">Donation Analytics</h6>
+                            <canvas id="donorChart" height="100"></canvas>
+                        </div>
+                    </div>
+                    <div class="col-lg-4">
+                        <div class="chart-container">
+                            <h6 class="mb-4"><i class="fa-solid fa-sparkles text-primary me-2"></i> AI Insights</h6>
+                            <div class="p-3 border rounded mb-3 border-custom" style="background: rgba(59,130,246,0.05);">
+                                <strong>Demand Forecast:</strong> High demand for Cooked Food in Downtown area this weekend.
+                            </div>
+                            <div class="p-3 border rounded mb-3 border-custom" style="background: rgba(16,185,129,0.05);">
+                                <strong>Freshness Optimizaton:</strong> Your average upload-to-pickup time is 45 mins. Excellent!
+                            </div>
+                            <div class="p-3 border rounded border-custom" style="background: rgba(245,158,11,0.05);">
+                                <strong>Recommendation:</strong> Consider freezing bakery items if not donated within 12hrs.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Donations Table -->
+                <div class="custom-table-container">
+                    <div class="p-3 border-bottom border-custom d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0">Recent Donations</h6>
+                        <button class="btn btn-sm btn-light border">View All</button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Food Item</th>
+                                    <th>Quantity</th>
+                                    <th>AI Freshness</th>
+                                    <th>Assigned NGO</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${db.donations.map(d => `
+                                <tr>
+                                    <td class="fw-bold">${d.id}</td>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="bg-light rounded p-2 text-center" style="width:35px;"><i class="fa-solid fa-utensils text-muted"></i></div>
+                                            <div>
+                                                <div class="fw-bold">${d.title}</div>
+                                                <div class="small text-muted-custom">${d.category}</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>${d.qty}</td>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="progress flex-grow-1" style="height: 6px;">
+                                                <div class="progress-bar bg-success" style="width: ${d.freshness}"></div>
+                                            </div>
+                                            <span class="small fw-bold">${d.freshness}</span>
+                                        </div>
+                                    </td>
+                                    <td>${d.ngo}</td>
+                                    <td><span class="badge-status badge-${d.status.toLowerCase()}">${d.status}</span></td>
+                                    <td>
+                                        <button class="btn btn-sm btn-light border"><i class="fa-solid fa-eye"></i></button>
+                                    </td>
+                                </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        }
+
+        function getNgoHtml() {
+            return `
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h4 class="mb-1">NGO Mission Control</h4>
+                        <p class="text-muted-custom small mb-0">Discover and collect available food donations nearby.</p>
+                    </div>
+                    <button class="btn btn-primary-custom">
+                        <i class="fa-solid fa-radar me-2"></i> Scan Area
+                    </button>
+                </div>
+
+                <div class="row g-4 mb-4">
+                    <div class="col-md-3">
+                        <div class="stat-card">
+                            <div class="stat-info">
+                                <h6>Nearby Donations</h6>
+                                <h3>24</h3>
+                                <span class="trend-up">Within 10km radius</span>
+                            </div>
+                            <div class="stat-icon icon-blue"><i class="fa-solid fa-location-dot"></i></div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-card">
+                            <div class="stat-info">
+                                <h6>Accepted Today</h6>
+                                <h3>8</h3>
+                                <span class="trend-up">In progress</span>
+                            </div>
+                            <div class="stat-icon icon-orange"><i class="fa-solid fa-truck-fast"></i></div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-card">
+                            <div class="stat-info">
+                                <h6>Avg Pickup Time</h6>
+                                <h3>32m</h3>
+                                <span class="trend-up">Faster than average</span>
+                            </div>
+                            <div class="stat-icon icon-purple"><i class="fa-solid fa-stopwatch"></i></div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-card">
+                            <div class="stat-info">
+                                <h6>Impact Score</h6>
+                                <h3>98.5</h3>
+                                <span class="trend-up"><i class="fa-solid fa-arrow-trend-up"></i> Top 5% NGO</span>
+                            </div>
+                            <div class="stat-icon icon-green"><i class="fa-solid fa-medal"></i></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-4 mb-4">
+                    <!-- Missions List -->
+                    <div class="col-lg-4">
+                        <h6 class="mb-3">Active Missions <span class="badge bg-danger rounded-pill">2 Urgent</span></h6>
+                        ${db.missions.map(m => `
+                            <div class="mission-card ${m.type}">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <h6 class="fw-bold mb-0">${m.title}</h6>
+                                    ${m.type === 'urgent' ? '<span class="badge bg-danger">Urgent</span>' : ''}
+                                </div>
+                                <p class="small text-muted-custom mb-3"><i class="fa-solid fa-location-dot me-1"></i> ${m.loc}</p>
+                                <div class="d-flex gap-3 small mb-3 fw-bold">
+                                    <span class="text-primary"><i class="fa-solid fa-route me-1"></i> ${m.dist}</span>
+                                    <span class="text-warning"><i class="fa-regular fa-clock me-1"></i> ${m.time} est.</span>
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <button class="btn btn-sm btn-primary-custom flex-grow-1">Accept</button>
+                                    <button class="btn btn-sm btn-light border"><i class="fa-solid fa-diamond-turn-right"></i></button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+
+                    <!-- Map & Chart Placeholder -->
+                    <div class="col-lg-8">
+                        <div class="chart-container d-flex flex-column mb-4" style="height: 350px;">
+                            <h6 class="mb-3 d-flex justify-content-between">
+                                <span>Live Logistics Map</span>
+                                <span class="badge bg-success bg-opacity-10 text-success border border-success"><i class="fa-solid fa-circle text-success small me-1"></i> System Online</span>
+                            </h6>
+                            <div class="flex-grow-1 rounded bg-light border d-flex align-items-center justify-content-center" style="background: url('https://raw.githubusercontent.com/googlemaps/js-samples/main/dist/images/map-custom-style.png') center/cover;">
+                                <!-- Simulated Google Maps overlay -->
+                                <div class="glass-card p-3 text-center">
+                                    <i class="fa-solid fa-map-location-dot fs-1 text-primary mb-2"></i>
+                                    <h6>Google Maps Integration Active</h6>
+                                    <p class="small mb-0 text-muted">Showing 24 active donation nodes</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="chart-container">
+                            <h6 class="mb-4">Collection Analytics</h6>
+                            <canvas id="ngoChart" height="60"></canvas>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function getAdminHtml() {
+            return `
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h4 class="mb-1">Platform Admin Center</h4>
+                        <p class="text-muted-custom small mb-0">System health, global analytics, and master controls.</p>
+                    </div>
+                    <button class="btn btn-primary-custom bg-danger border-danger">
+                        <i class="fa-solid fa-triangle-exclamation me-2"></i> View Alerts
+                    </button>
+                </div>
+
+                <div class="row g-4 mb-4">
+                    <div class="col-md-3">
+                        <div class="stat-card border-primary" style="border-width: 2px;">
+                            <div class="stat-info">
+                                <h6>System Health</h6>
+                                <h3>99.9%</h3>
+                                <span class="trend-up">All services operational</span>
+                            </div>
+                            <div class="stat-icon icon-blue text-white bg-primary"><i class="fa-solid fa-server"></i></div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-card">
+                            <div class="stat-info">
+                                <h6>Total Users</h6>
+                                <h3>1,585</h3>
+                                <span class="trend-up">+145 this week</span>
+                            </div>
+                            <div class="stat-icon icon-green"><i class="fa-solid fa-users-viewfinder"></i></div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-card">
+                            <div class="stat-info">
+                                <h6>Total Food Rescued</h6>
+                                <h3>142.5 Tons</h3>
+                                <span class="trend-up">Lifetime statistics</span>
+                            </div>
+                            <div class="stat-icon icon-purple"><i class="fa-solid fa-earth-americas"></i></div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-card">
+                            <div class="stat-info">
+                                <h6>Pending NGO Audits</h6>
+                                <h3>12</h3>
+                                <span class="trend-down">Requires attention</span>
+                            </div>
+                            <div class="stat-icon icon-orange"><i class="fa-solid fa-clipboard-list"></i></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-4 mb-4">
+                    <div class="col-lg-8">
+                        <div class="chart-container">
+                            <h6 class="mb-4">Platform Growth (Active Users)</h6>
+                            <canvas id="adminChart2" height="100"></canvas>
+                        </div>
+                    </div>
+                    <div class="col-lg-4">
+                        <div class="chart-container">
+                            <h6 class="mb-4">User Distribution</h6>
+                            <div style="height: 250px; display:flex; justify-content:center;">
+                                <canvas id="adminChart1"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // --- 6. CHART.JS RENDERERS ---
+        const commonChartOptions = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { beginAtZero: true, grid: { color: 'rgba(128,128,128,0.1)' } },
+                x: { grid: { display: false } }
+            }
+        };
+
+        function renderBarChart(canvasId, label, data) {
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+            gradient.addColorStop(0, 'rgba(16, 185, 129, 0.8)');
+            gradient.addColorStop(1, 'rgba(16, 185, 129, 0.2)');
+
+            const chart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    datasets: [{
+                        label: label,
+                        data: data,
+                        backgroundColor: gradient,
+                        borderRadius: 6,
+                        borderSkipped: false
+                    }]
+                },
+                options: commonChartOptions
+            });
+            state.charts.push(chart);
+        }
+
+        function renderLineChart(canvasId, label, data) {
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+            gradient.addColorStop(0, 'rgba(59, 130, 246, 0.4)');
+            gradient.addColorStop(1, 'rgba(59, 130, 246, 0.0)');
+
+            const chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+                    datasets: [{
+                        label: label,
+                        data: data,
+                        borderColor: '#3b82f6',
+                        backgroundColor: gradient,
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: commonChartOptions
+            });
+            state.charts.push(chart);
+        }
+
+        function renderDoughnutChart(canvasId, label, data) {
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            const chart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Donors', 'NGOs', 'Admins'],
+                    datasets: [{
+                        data: data,
+                        backgroundColor: ['#10b981', '#3b82f6', '#f59e0b'],
+                        borderWidth: 0,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '75%',
+                    plugins: {
+                        legend: { position: 'bottom', labels: { color: state.theme === 'dark' ? '#94a3b8' : '#64748b' } }
+                    }
+                }
+            });
+            state.charts.push(chart);
+        }
+
+        // --- 7. UTILITIES & WIDGETS ---
+        function showToast(title, message, icon = 'fa-bell', colorClass = 'text-primary') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = 'custom-toast';
+            toast.innerHTML = `
+                <div style="font-size: 1.5rem;" class="${colorClass}">
+                    <i class="fa-solid ${icon}"></i>
+                </div>
+                <div>
+                    <h6 class="mb-1 fw-bold" style="font-size: 0.9rem;">${title}</h6>
+                    <p class="mb-0 small text-muted-custom">${message}</p>
+                </div>
+            `;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.animation = 'slideIn 0.3s ease reverse forwards';
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
+        }
+
+        function showNotifications() {
+            showToast("Notifications", "You have 3 unread system alerts.");
+        }
+
+        function toggleChat() {
+            const chat = document.getElementById('chat-window');
+            chat.style.display = chat.style.display === 'flex' ? 'none' : 'flex';
+        }
+
+        function handleChatKeyPress(e) {
+            if (e.key === 'Enter') sendChatMessage();
+        }
+
+        function sendChatMessage() {
+            const input = document.getElementById('chat-input-field');
+            const text = input.value.trim();
+            if(!text) return;
+            
+            const chatBody = document.getElementById('chat-messages');
+            
+            // Add User message
+            chatBody.innerHTML += `<div class="chat-msg msg-user">${text}</div>`;
+            input.value = '';
+            chatBody.scrollTop = chatBody.scrollHeight;
+
+            // Mock AI Response
+            setTimeout(() => {
+                chatBody.innerHTML += `<div class="chat-msg msg-ai"><i class="fa-solid fa-robot text-primary me-2"></i> Based on platform data, the current high-priority need is Cooked Food in your vicinity. Would you like me to generate an impact report for your latest donations?</div>`;
+                chatBody.scrollTop = chatBody.scrollHeight;
+            }, 1000);
+        }
+
+    </script>
+</body>
+</html>

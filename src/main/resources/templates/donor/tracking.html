@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{fragments/common :: head('Track Donation')}"></head>
+
+<body>
+
+    <div class="app-wrapper">
+        <aside th:replace="~{fragments/sidebar :: sidebar('tracking', 'DONOR')}"></aside>
+
+        <div class="main-container">
+            <nav th:replace="~{fragments/navbar :: navbar}"></nav>
+
+            <main class="content-body">
+                <div class="mb-5 d-flex justify-content-between align-items-center" data-aos="fade-down">
+                    <div>
+                        <h2 class="fw-bold mb-1">Live Rescue Tracking</h2>
+                        <p class="text-muted">Track your donation requests in real-time.</p>
+                    </div>
+                    <span id="request-status-badge"
+                        class="badge bg-success bg-opacity-10 text-success p-2 px-3 rounded-pill fw-bold border border-success border-opacity-25">
+                        <i class="fa-solid fa-circle-dot me-2 animate-pulse"></i> SELECT A REQUEST
+                    </span>
+                </div>
+
+                <!-- ── Request Selector ── -->
+                <div class="card-enterprise mb-4" data-aos="fade-up">
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <i class="fa-solid fa-route text-primary fs-5"></i>
+                        <h6 class="fw-bold mb-0">My Donation Requests</h6>
+                    </div>
+                    <div class="row g-3 align-items-end">
+                        <div class="col-md-8">
+                            <label class="form-label small fw-bold text-muted">Select a Request to Track</label>
+                            <select class="form-select" id="request-selector" onchange="loadRequestTracking()">
+                                <option value="">-- Choose a request --</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <button class="btn btn-outline-dark rounded-pill w-100" onclick="initDonorRequests()">
+                                <i class="fa-solid fa-rotate-right me-2"></i>Refresh
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ── Dynamic Status Timeline ── -->
+                <div id="request-tracking-section" style="display:none;" class="mb-5">
+                    <div class="row g-4">
+                        <div class="col-lg-5" data-aos="fade-right">
+                            <div class="card-enterprise p-4">
+                                <h5 class="fw-bold mb-4">Request Timeline</h5>
+                                <div class="tracking-timeline" id="dynamic-timeline">
+                                    <div class="text-center py-3 text-muted">Select a request above</div>
+                                </div>
+                                <div id="request-detail-card" class="mt-4 p-3 bg-light rounded-4" style="display:none;">
+                                    <div class="row g-2 small" id="request-details-content"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-7" data-aos="fade-left">
+                            <div class="card-enterprise p-0 overflow-hidden d-flex flex-column mb-4" style="height: 380px; position: relative;">
+                                <div id="dynamic-tracking-canvas" style="width:100%; height:100%; min-height:380px;"></div>
+                                <div id="dynamic-map-placeholder" class="w-100 h-100 bg-secondary bg-opacity-10 d-flex align-items-center justify-content-center position-absolute top-0 start-0">
+                                    <div class="text-center opacity-50">
+                                        <i class="fa-solid fa-map-location-dot display-1 mb-3" aria-hidden="true"></i>
+                                        <p class="fw-bold">Interactive Google Map Loading...</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-enterprise p-4">
+                                <h5 class="fw-bold mb-4">Request Details</h5>
+                                <div id="request-info-panel" class="text-muted text-center py-3">
+                                    <i class="fa-solid fa-clipboard-list fs-3 mb-3 d-block"></i>
+                                    Select a request to see full details.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-4" id="demo-tracking-section">
+                    <!-- Left: Timeline -->
+                    <div class="col-lg-5" data-aos="fade-right">
+                        <div class="card-enterprise p-4">
+                            <h5 class="fw-bold mb-4">Mission Lifecycle</h5>
+                            <div class="tracking-timeline">
+                                <div class="step completed">
+                                    <div class="step-icon"><i class="fa-solid fa-check"></i></div>
+                                    <div class="step-content">
+                                        <h6 class="fw-bold mb-0">Donation Created</h6>
+                                        <p class="small text-muted mb-0">June 20, 2:15 PM</p>
+                                        <div class="small text-success fw-bold">Successly listed on platform</div>
+                                    </div>
+                                </div>
+                                <div class="step completed">
+                                    <div class="step-icon"><i class="fa-solid fa-check"></i></div>
+                                    <div class="step-content">
+                                        <h6 class="fw-bold mb-0">AI Vision Analysis</h6>
+                                        <p class="small text-muted mb-0">June 20, 2:17 PM</p>
+                                        <div class="small bg-light p-2 rounded mt-2">
+                                            <span class="d-block">Freshness: <span class="fw-bold">92%</span></span>
+                                            <span class="d-block">AI Decision: <span class="fw-bold text-success">SAFE
+                                                    FOR RESCUE</span></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="step completed">
+                                    <div class="step-icon"><i class="fa-solid fa-check"></i></div>
+                                    <div class="step-content">
+                                        <h6 class="fw-bold mb-0">NGO Notified & Accepted</h6>
+                                        <p class="small text-muted mb-0">June 20, 2:25 PM</p>
+                                        <div class="d-flex align-items-center gap-2 mt-2">
+                                            <img src="https://ui-avatars.com/api/?name=Green+Earth&background=3b82f6&color=fff"
+                                                class="rounded-circle" width="28">
+                                            <div>
+                                                <span class="d-block small fw-bold">Green Earth Rescue</span>
+                                                <span class="d-block small text-muted">Distance: 2.4 km away</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="step active">
+                                    <div class="step-icon"><i class="fa-solid fa-truck-fast"></i></div>
+                                    <div class="step-content">
+                                        <h6 class="fw-bold mb-0">NGO Collected (En Route)</h6>
+                                        <p class="small text-muted mb-0">Started at 2:40 PM</p>
+                                        <p class="small text-primary fw-bold mt-1">Est. Completion: 15 mins</p>
+                                    </div>
+                                </div>
+                                <div class="step">
+                                    <div class="step-icon"><i class="fa-solid fa-house-chimney"></i></div>
+                                    <div class="step-content text-muted">
+                                        <h6 class="fw-bold mb-0">Redistribution Completed</h6>
+                                        <p class="small mb-0">Expected around 3:30 PM</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right: Map Preview / Details -->
+                    <div class="col-lg-7" data-aos="fade-left">
+                        <div class="card-enterprise p-0 overflow-hidden h-100 d-flex flex-column">
+                            <div class="p-4 border-bottom">
+                                <h5 class="fw-bold mb-0">Live Proximity View</h5>
+                            </div>
+                            <div class="flex-grow-1 bg-light position-relative" style="min-height: 400px;">
+                                <!-- Real Google Maps Canvas for tracking -->
+                                <div id="google-tracking-canvas" style="width:100%; height:100%; min-height:400px;">
+                                </div>
+
+                                <!-- Fallback Placeholder -->
+                                <div id="tracking-map-placeholder"
+                                    class="w-100 h-100 bg-secondary bg-opacity-10 d-flex align-items-center justify-content-center position-absolute top-0 start-0">
+                                    <div class="text-center opacity-50">
+                                        <i class="fa-solid fa-map-location-dot display-1 mb-3" aria-hidden="true"></i>
+                                        <p class="fw-bold">Interactive Google Map Loading...</p>
+                                        <p class="small text-muted">Add a Google Maps API key to enable route
+                                            visualization.</p>
+                                    </div>
+                                </div>
+
+                                <!-- Floating Driver Info -->
+                                <div class="position-absolute bottom-0 start-0 w-100 p-4">
+                                    <div class="card bg-white shadow-lg border-0 rounded-4 overflow-hidden">
+                                        <div class="row g-0">
+                                            <div class="col-md-8 p-3 px-4">
+                                                <div class="d-flex align-items-center gap-3">
+                                                    <img src="https://ui-avatars.com/api/?name=Driver+X&background=020617&color=fff"
+                                                        class="rounded-pill" width="48">
+                                                    <div>
+                                                        <span class="badge bg-dark small mb-1">RESCUE VEHICLE #42</span>
+                                                        <h6 class="fw-bold mb-0">Mark Spencer (NGO Driver)</h6>
+                                                        <p class="small text-muted mb-0"><i
+                                                                class="fa-solid fa-star text-warning"></i> 4.9 • 2,450
+                                                            Rescues</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div
+                                                class="col-md-4 bg-primary text-white p-3 d-flex flex-column justify-content-center align-items-center">
+                                                <button class="btn btn-white btn-sm fw-bold px-4 rounded-pill mb-2"><i
+                                                        class="fa-solid fa-phone me-2"></i> Call</button>
+                                                <button
+                                                    class="btn btn-outline-white btn-sm fw-bold px-4 rounded-pill"><i
+                                                        class="fa-solid fa-message me-2"></i> Chat</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <nav th:replace="~{fragments/common :: scripts}"></nav>
+    <script th:src="@{/js/donation-request.js}"></script>
+    <script>
+        // ── Donation Request Tracking Logic ──────────────────────────────────
+        const TIMELINE_STEPS = [
+            { status: 'PENDING',            icon: 'fa-paper-plane',      label: 'Request Sent',        tsField: 'requestedAt' },
+            { status: 'ACCEPTED',           icon: 'fa-handshake',        label: 'NGO Accepted',        tsField: 'acceptedAt' },
+            { status: 'ASSIGNED',           icon: 'fa-person-walking',   label: 'Delivery Assigned',   tsField: 'assignedAt' },
+            { status: 'PICKUP_IN_PROGRESS', icon: 'fa-truck-fast',       label: 'Pickup Started',      tsField: 'pickupStartedAt' },
+            { status: 'COLLECTED',          icon: 'fa-box-open',         label: 'Food Collected',      tsField: 'collectedAt' },
+            { status: 'RECEIVED',           icon: 'fa-warehouse',        label: 'Received by NGO',     tsField: 'receivedAt' },
+            { status: 'DELIVERED',          icon: 'fa-flag-checkered',   label: 'Food Delivered',      tsField: 'deliveredAt' },
+        ];
+
+        const STATUS_ORDER = TIMELINE_STEPS.map(s => s.status);
+
+        async function initDonorRequests() {
+            const selector = document.getElementById('request-selector');
+            selector.innerHTML = '<option value="">Loading...</option>';
+            try {
+                const requests = await window.drService.loadDonorRequests();
+                selector.innerHTML = '<option value="">-- Choose a request --</option>';
+                requests.forEach(r => {
+                    const opt = document.createElement('option');
+                    opt.value = JSON.stringify(r);
+                    opt.textContent = `#REQ-${r.id} — ${r.donationTitle} → ${r.ngoName} [${r.status}]`;
+                    selector.appendChild(opt);
+                });
+                if (!requests.length) {
+                    selector.innerHTML = '<option value="">No requests found</option>';
+                } else {
+                    selector.selectedIndex = 1;
+                    loadRequestTracking();
+                }
+            } catch (e) {
+                selector.innerHTML = '<option value="">Failed to load requests</option>';
+            }
+        }
+
+        function loadRequestTracking() {
+            const selector = document.getElementById('request-selector');
+            const val = selector.value;
+            if (!val) {
+                document.getElementById('request-tracking-section').style.display = 'none';
+                document.getElementById('demo-tracking-section').style.display = 'flex';
+                return;
+            }
+            const r = JSON.parse(val);
+            document.getElementById('request-tracking-section').style.display = 'block';
+            document.getElementById('demo-tracking-section').style.display = 'none';
+            renderDynamicTimeline(r);
+            renderRequestInfo(r);
+            updateStatusBadge(r.status);
+            initDynamicMap(r);
+        }
+
+        function initDynamicMap(r) {
+            if (!window.mapIntegration) return;
+
+            const mapContainer = document.getElementById('dynamic-tracking-canvas');
+            if (!mapContainer) return;
+
+            const pickupLoc = { lat: r.locationLatitude || 18.5204, lng: r.locationLongitude || 73.8567 };
+
+            const map = window.mapIntegration.initMap('dynamic-tracking-canvas', {
+                center: pickupLoc,
+                zoom: 14
+            });
+
+            if (!map) {
+                document.getElementById('dynamic-map-placeholder').style.display = 'flex';
+                return;
+            }
+
+            document.getElementById('dynamic-map-placeholder').style.display = 'none';
+
+            window.mapIntegration.clearMarkers();
+            window.mapIntegration.addMarker(pickupLoc.lat, pickupLoc.lng, 'DONOR', `Pickup Point: ${r.pickupAddress || 'Donation Location'}`, r);
+        }
+
+        function renderDynamicTimeline(r) {
+            const currentIdx = STATUS_ORDER.indexOf(r.status);
+            const isTerminal = ['REJECTED','EXPIRED','CANCELLED'].includes(r.status);
+
+            let html = '';
+            if (isTerminal) {
+                html = `<div class="step">
+                    <div class="step-icon" style="background:#ef4444;border-color:#ef4444;color:white;">
+                        <i class="fa-solid fa-xmark"></i>
+                    </div>
+                    <div class="step-content">
+                        <h6 class="fw-bold mb-0 text-danger">${r.status === 'REJECTED' ? 'Request Rejected' : r.status}</h6>
+                        ${r.rejectionReason ? `<p class="small text-muted">Reason: ${r.rejectionReason}</p>` : ''}
+                    </div>
+                </div>`;
+            } else {
+                TIMELINE_STEPS.forEach((step, idx) => {
+                    const isDone = idx <= currentIdx;
+                    const isActive = idx === currentIdx;
+                    const ts = r[step.tsField];
+                    html += `<div class="step ${isDone ? 'completed' : ''} ${isActive ? 'active' : ''}">
+                        <div class="step-icon"><i class="fa-solid ${step.icon}"></i></div>
+                        <div class="step-content">
+                            <h6 class="fw-bold mb-0">${step.label}</h6>
+                            <p class="small text-muted mb-0">${ts ? window.drService.formatDateTime(ts) : (isDone ? 'Completed' : 'Pending')}</p>
+                        </div>
+                    </div>`;
+                });
+            }
+            document.getElementById('dynamic-timeline').innerHTML = html;
+        }
+
+        function renderRequestInfo(r) {
+            const panel = document.getElementById('request-info-panel');
+            panel.innerHTML = `
+                <div class="row g-3 text-start">
+                    <div class="col-6">
+                        <div class="small text-muted fw-bold text-uppercase mb-1">Food</div>
+                        <div class="fw-semibold">${r.donationTitle}</div>
+                        <div class="small text-muted">${r.donationFoodCategory || ''}</div>
+                    </div>
+                    <div class="col-6">
+                        <div class="small text-muted fw-bold text-uppercase mb-1">Quantity</div>
+                        <div class="fw-semibold">${r.donationQuantityKg} kg</div>
+                    </div>
+                    <div class="col-6">
+                        <div class="small text-muted fw-bold text-uppercase mb-1">NGO</div>
+                        <div class="fw-semibold">${r.ngoName}</div>
+                        <div class="small text-muted">${r.ngoEmail}</div>
+                    </div>
+                    <div class="col-6">
+                        <div class="small text-muted fw-bold text-uppercase mb-1">Status</div>
+                        ${window.drService.statusBadge(r.status)}
+                    </div>
+                    ${r.assignedToName ? `
+                    <div class="col-6">
+                        <div class="small text-muted fw-bold text-uppercase mb-1">Delivery Person</div>
+                        <div class="fw-semibold"><i class="fa-solid fa-person-walking me-1"></i>${r.assignedToName}</div>
+                        ${r.assignedToPhone ? `<div class="small text-muted">${r.assignedToPhone}</div>` : ''}
+                    </div>` : ''}
+                    <div class="col-12">
+                        <div class="small text-muted fw-bold text-uppercase mb-1">Pickup Address</div>
+                        <div class="small">${r.pickupAddress || '—'}</div>
+                    </div>
+                    ${r.receivedQuantityKg ? `
+                    <div class="col-6">
+                        <div class="small text-muted fw-bold text-uppercase mb-1">Received Qty</div>
+                        <div class="fw-semibold">${r.receivedQuantityKg} kg</div>
+                    </div>` : ''}
+                    ${r.deliveryNotes ? `
+                    <div class="col-12">
+                        <div class="small text-muted fw-bold text-uppercase mb-1">Notes</div>
+                        <div class="small">${r.deliveryNotes}</div>
+                    </div>` : ''}
+                </div>
+            `;
+        }
+
+        function updateStatusBadge(status) {
+            const badge = document.getElementById('request-status-badge');
+            const colorMap = {
+                'PENDING': 'bg-warning bg-opacity-10 text-warning border-warning',
+                'ACCEPTED': 'bg-primary bg-opacity-10 text-primary border-primary',
+                'ASSIGNED': 'bg-info bg-opacity-10 text-info border-info',
+                'PICKUP_IN_PROGRESS': 'bg-secondary bg-opacity-10 text-secondary border-secondary',
+                'COLLECTED': 'bg-success bg-opacity-10 text-success border-success',
+                'RECEIVED': 'bg-success bg-opacity-20 text-success border-success',
+                'DELIVERED': 'bg-success text-white border-success',
+                'REJECTED': 'bg-danger bg-opacity-10 text-danger border-danger',
+            };
+            const cls = colorMap[status] || 'bg-success bg-opacity-10 text-success border-success';
+            badge.className = `badge ${cls} p-2 px-3 rounded-pill fw-bold border`;
+            badge.innerHTML = `<i class="fa-solid fa-circle-dot me-2 animate-pulse"></i>${status.replace('_', ' ')}`;
+        }
+
+        document.addEventListener('DOMContentLoaded', initDonorRequests);
+
+        // ── Tracking Map Initialization ──────────────────────────────────────
+        function initTrackingMap() {
+            if (!window.mapIntegration) return;
+
+            const map = window.mapIntegration.initMap('google-tracking-canvas', {
+                center: { lat: 40.7128, lng: -74.0060 },
+                zoom: 14
+            });
+
+            if (!map) {
+                document.getElementById('tracking-map-placeholder').style.display = 'flex';
+                return;
+            }
+
+            document.getElementById('tracking-map-placeholder').style.display = 'none';
+
+            // Donor origin (pickup point)
+            const donorLocation = { lat: 40.7158, lng: -74.0020 };
+            // NGO driver current location
+            const driverLocation = { lat: 40.7135, lng: -74.0045 };
+
+            window.mapIntegration.addMarker(donorLocation.lat, donorLocation.lng, 'DONOR', 'Pickup Point: Grand Plaza Hotel', {});
+            window.mapIntegration.addMarker(driverLocation.lat, driverLocation.lng, 'NGO', 'Driver: Mark Spencer (En Route)', {});
+
+            // Draw live route if Directions API is available
+            window.mapIntegration.calculateRoute(
+                new google.maps.LatLng(driverLocation.lat, driverLocation.lng),
+                new google.maps.LatLng(donorLocation.lat, donorLocation.lng)
+            ).then(response => {
+                const leg = response.routes[0]?.legs[0];
+                if (leg && window.showToast) {
+                    window.showToast(`Driver is ${leg.distance.text} away • ETA: ${leg.duration.text}`, 'info');
+                }
+            }).catch(() => {
+                // Route unavailable - still show markers
+            });
+        }
+    </script>
+
+    <!-- Load Google Maps API. Replace PLACEHOLDER_KEY with your actual key. -->
+    <script
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAOVYRIgupAurZup5y1PRh8Ismb1A3lLao&callback=initTrackingMap"
+        async defer onerror="document.getElementById('tracking-map-placeholder').style.display='flex';"></script>
+
+    <style>
+        /* Timeline Stepper */
+        .tracking-timeline {
+            padding-left: 20px;
+        }
+
+        .step {
+            position: relative;
+            padding-bottom: 30px;
+            display: flex;
+            gap: 20px;
+        }
+
+        .step::before {
+            content: '';
+            position: absolute;
+            left: 14px;
+            top: 30px;
+            height: calc(100% - 30px);
+            width: 2px;
+            background: var(--border-color);
+        }
+
+        .step:last-child {
+            padding-bottom: 0;
+        }
+
+        .step:last-child::before {
+            display: none;
+        }
+
+        .step-icon {
+            width: 30px;
+            height: 30px;
+            background: var(--bg-main);
+            border: 2px solid var(--border-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            z-index: 1;
+            transition: var(--transition);
+        }
+
+        .step.completed::before {
+            background: var(--primary);
+        }
+
+        .step.completed .step-icon {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+
+        .step.active .step-icon {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+            animation: pulse-shadow 2s infinite;
+        }
+
+        .step-content {
+            flex: 1;
+        }
+
+        @keyframes pulse-shadow {
+            0% {
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
+            }
+
+            70% {
+                box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+            }
+        }
+
+        .animate-pulse {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
+
+        .btn-white {
+            background: white;
+            color: var(--text-main);
+        }
+
+        .btn-outline-white {
+            border: 1px solid white;
+            color: white;
+        }
+    </style>
+</body>
+
+</html>

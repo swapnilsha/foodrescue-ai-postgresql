@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/common :: head('Help Center')}"></head>
+<body>
+
+    <div class="app-wrapper">
+        <aside th:replace="~{fragments/sidebar :: sidebar('help', 'SHARED')}"></aside>
+
+        <div class="main-container">
+            <nav th:replace="~{fragments/navbar :: navbar}"></nav>
+
+            <main class="content-body">
+                <div class="mb-5" data-aos="fade-down">
+                    <h2 class="fw-bold mb-1">Help Center</h2>
+                    <p class="text-muted">Find answers, guides, and support for the FoodRescue AI platform.</p>
+                </div>
+
+                <!-- Quick Links -->
+                <div class="row g-4 mb-5" data-aos="fade-up">
+                    <div class="col-md-4">
+                        <div class="card-enterprise text-center p-4 help-card">
+                            <div class="help-icon bg-success bg-opacity-10 text-success mx-auto mb-3">
+                                <i class="fa-solid fa-book-open fs-4"></i>
+                            </div>
+                            <h6 class="fw-bold mb-2">Getting Started</h6>
+                            <p class="small text-muted mb-3">Learn the platform basics — registration, login, and your first donation.</p>
+                            <a href="#faq-getting-started" class="btn btn-outline-success btn-sm px-4">Read Guide</a>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card-enterprise text-center p-4 help-card">
+                            <div class="help-icon bg-primary bg-opacity-10 text-primary mx-auto mb-3">
+                                <i class="fa-solid fa-cloud-arrow-up fs-4"></i>
+                            </div>
+                            <h6 class="fw-bold mb-2">Submitting Donations</h6>
+                            <p class="small text-muted mb-3">Step-by-step guide for uploading food donations with AI analysis.</p>
+                            <a href="#faq-donations" class="btn btn-outline-primary btn-sm px-4">Read Guide</a>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card-enterprise text-center p-4 help-card">
+                            <div class="help-icon bg-warning bg-opacity-10 text-warning mx-auto mb-3">
+                                <i class="fa-solid fa-headset fs-4"></i>
+                            </div>
+                            <h6 class="fw-bold mb-2">Contact Support</h6>
+                            <p class="small text-muted mb-3">Reach our team for urgent issues or platform feature requests.</p>
+                            <a href="mailto:support@foodrescue.ai" class="btn btn-outline-warning btn-sm px-4">Email Support</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FAQ Section -->
+                <div class="card-enterprise" data-aos="fade-up" data-aos-delay="100">
+                    <h5 class="fw-bold mb-4">
+                        <i class="fa-regular fa-circle-question text-primary me-2"></i>
+                        Frequently Asked Questions
+                    </h5>
+
+                    <!-- Getting Started FAQs -->
+                    <div id="faq-getting-started" class="mb-4">
+                        <h6 class="fw-bold text-muted text-uppercase small mb-3 ls-1">Getting Started</h6>
+                        <div class="accordion" id="accordionGettingStarted">
+                            <div class="accordion-item border-0 border-bottom">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+                                        How do I register as a Donor?
+                                    </button>
+                                </h2>
+                                <div id="faq1" class="accordion-collapse collapse" data-bs-parent="#accordionGettingStarted">
+                                    <div class="accordion-body text-muted small">
+                                        Visit the <a href="/register" class="text-primary">Registration page</a>, select <strong>Donor</strong> as your role,
+                                        fill in your organization details, and submit. You'll receive a verification notice and can log in immediately.
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="accordion-item border-0 border-bottom">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                                        What is the difference between Donor and NGO roles?
+                                    </button>
+                                </h2>
+                                <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#accordionGettingStarted">
+                                    <div class="accordion-body text-muted small">
+                                        <strong>Donors</strong> upload food surplus and track its journey. <strong>NGOs</strong> browse available donations nearby,
+                                        accept missions, and collect food for redistribution. Admins manage the entire platform ecosystem.
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="accordion-item border-0">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
+                                        How does the JWT authentication work?
+                                    </button>
+                                </h2>
+                                <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#accordionGettingStarted">
+                                    <div class="accordion-body text-muted small">
+                                        After login, a secure token is stored in your browser's local storage. This token is automatically sent with every API request.
+                                        It expires after 24 hours — simply log in again to refresh it.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Donations FAQs -->
+                    <div id="faq-donations" class="mb-4">
+                        <h6 class="fw-bold text-muted text-uppercase small mb-3 ls-1">Donations & Food Rescue</h6>
+                        <div class="accordion" id="accordionDonations">
+                            <div class="accordion-item border-0 border-bottom">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#faq4">
+                                        How do I submit a food donation?
+                                    </button>
+                                </h2>
+                                <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#accordionDonations">
+                                    <div class="accordion-body text-muted small">
+                                        Navigate to <strong>Upload Food</strong> from the sidebar. Fill in the title, category, quantity, expiry time, and pickup address.
+                                        Optionally use the <strong>AI Vision Assistant</strong> to auto-fill by uploading a photo of the food.
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="accordion-item border-0 border-bottom">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#faq5">
+                                        What happens after I submit a donation?
+                                    </button>
+                                </h2>
+                                <div id="faq5" class="accordion-collapse collapse" data-bs-parent="#accordionDonations">
+                                    <div class="accordion-body text-muted small">
+                                        Nearby NGOs are notified in real-time via WebSocket. They can browse, view details, and accept your donation.
+                                        You'll receive an in-app notification and can track status in <strong>Donation History</strong>.
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="accordion-item border-0">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#faq6">
+                                        How does the AI Vision Assistant work?
+                                    </button>
+                                </h2>
+                                <div id="faq6" class="accordion-collapse collapse" data-bs-parent="#accordionDonations">
+                                    <div class="accordion-body text-muted small">
+                                        Upload a clear photo of the food. Our AI analyzes the image, detects food type, estimates quantity in kg,
+                                        assesses freshness, and checks safety status — then auto-fills your donation form with these values.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Contact Banner -->
+                    <div class="alert border-0 rounded-4 p-4" style="background: linear-gradient(135deg, rgba(16,185,129,0.08), rgba(59,130,246,0.08));">
+                        <div class="d-flex align-items-center gap-4 flex-wrap">
+                            <div class="bg-success bg-opacity-10 text-success p-3 rounded-circle flex-shrink-0">
+                                <i class="fa-solid fa-envelope fs-4"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h6 class="fw-bold mb-1">Still need help?</h6>
+                                <p class="mb-0 small text-muted">Our support team is available Mon–Fri, 9am–6pm IST. Average response time: 2 hours.</p>
+                            </div>
+                            <a href="mailto:support@foodrescue.ai" class="btn btn-enterprise btn-enterprise-primary btn-sm px-4 flex-shrink-0">
+                                <i class="fa-solid fa-paper-plane me-2"></i>Contact Support
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <nav th:replace="~{fragments/common :: scripts}"></nav>
+    <style>
+        .ls-1 { letter-spacing: 0.05em; }
+        .help-icon { width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+        .help-card { transition: var(--transition); }
+        .help-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
+        .accordion-button:not(.collapsed) { color: var(--primary); background: rgba(16, 185, 129, 0.05); box-shadow: none; }
+        .accordion-button:focus { box-shadow: none; }
+        .accordion-button { font-size: 0.9rem; }
+    </style>
+</body>
+</html>

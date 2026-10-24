@@ -1,0 +1,87 @@
+<!-- Navbar Fragment -->
+<nav th:fragment="navbar" class="navbar navbar-expand-lg">
+    <div class="d-flex align-items-center gap-3">
+        <button class="nav-btn d-lg-none" onclick="toggleSidebar()">
+            <i class="fa-solid fa-bars"></i>
+        </button>
+        <div class="search-bar d-none d-md-block">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" placeholder="Search for donations, NGOs, or records...">
+        </div>
+    </div>
+
+    <div class="nav-actions">
+        <!-- Quick Action Panel (Desktop) -->
+        <div class="d-none d-lg-flex gap-2 me-3">
+            <a href="/donor/upload" class="btn-enterprise btn-enterprise-primary btn-sm text-decoration-none d-inline-flex align-items-center gap-1" style="padding: 0.4rem 1rem; font-size: 0.85rem;" id="quick-donate-btn">
+                <i class="fa-solid fa-plus"></i> Quick donate
+            </a>
+        </div>
+
+        <!-- Theme Toggle -->
+        <button class="nav-btn" id="theme-toggle-btn" onclick="toggleTheme()" title="Toggle Theme">
+            <i class="fa-solid fa-moon"></i>
+        </button>
+
+        <!-- Notification Center -->
+        <a href="/notifications" class="nav-btn has-badge text-decoration-none" title="Notifications" id="notification-bell-btn">
+            <i class="fa-regular fa-bell"></i>
+            <span class="badge" id="notif-badge" data-unread-count></span>
+        </a>
+
+        <!-- AI Assistant Shortcuts -->
+        <button class="nav-btn" title="AI Rescue Assistant">
+            <i class="fa-solid fa-wand-magic-sparkles"></i>
+        </button>
+
+        <!-- Profile Dropdown -->
+        <div class="dropdown ms-2">
+            <button class="d-flex align-items-center gap-2 border-0 bg-transparent p-1 dropdown-toggle no-caret" type="button" data-bs-toggle="dropdown">
+                <img id="navbar-avatar" src="https://ui-avatars.com/api/?name=User&background=10b981&color=fff" alt="User Avatar" class="rounded-circle" style="width: 36px; height: 36px; border: 2px solid var(--border-color);">
+                <div class="text-start d-none d-sm-block" style="line-height: 1.2;">
+                    <div class="fw-bold small" style="color: var(--text-main);" id="navbar-user-name">Loading…</div>
+                    <div class="text-muted small" style="font-size: 0.7rem; text-transform: uppercase;" id="navbar-user-role">—</div>
+                </div>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end border-custom shadow-sm p-2" style="border-radius: var(--border-radius-md); min-width: 200px;">
+                <li><a class="dropdown-item p-2 rounded-sm" href="/profile"><i class="fa-regular fa-user me-2"></i> My Profile</a></li>
+                <li><a class="dropdown-item p-2 rounded-sm" href="/settings"><i class="fa-solid fa-gears me-2"></i> Settings</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item p-2 rounded-sm text-danger" href="/logout" onclick="logoutUser(event)"><i class="fa-solid fa-arrow-right-from-bracket me-2"></i> Logout</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        (function initNavbarUser() {
+            function logoutUser(event) {
+                event.preventDefault();
+                if (window.api) window.api.clearTokens();
+                if (window.sessionStorage) sessionStorage.clear();
+                window.location.href = '/logout';
+            }
+            window.logoutUser = logoutUser;
+
+            function applyUser(user) {
+                if (!user) return;
+                const nameEl = document.getElementById('navbar-user-name');
+                const roleEl = document.getElementById('navbar-user-role');
+                const avatarEl = document.getElementById('navbar-avatar');
+                if (nameEl) nameEl.textContent = user.name || user.email || 'User';
+                if (roleEl) roleEl.textContent = (user.role || 'Member').replace('ROLE_', '');
+                if (avatarEl) {
+                    const initials = encodeURIComponent((user.name || 'U').split(' ').map(w => w[0]).join('').toUpperCase());
+                    avatarEl.src = user.avatarUrl || `https://ui-avatars.com/api/?name=${initials}&background=10b981&color=fff`;
+                    avatarEl.alt = (user.name || 'User') + ' avatar';
+                }
+            }
+
+            document.addEventListener('DOMContentLoaded', () => {
+                if (window.stateManager) {
+                    applyUser(window.stateManager.getUser());
+                    window.stateManager.on('userChanged', applyUser);
+                }
+            });
+        })();
+    </script>
+</nav>

@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/common :: head('Global User Management')}"></head>
+<body>
+
+    <div class="app-wrapper">
+        <aside th:replace="~{fragments/sidebar :: sidebar('users', 'ADMIN')}"></aside>
+
+        <div class="main-container">
+            <nav th:replace="~{fragments/navbar :: navbar}"></nav>
+
+            <main class="content-body">
+                <div class="d-flex justify-content-between align-items-end mb-5" data-aos="fade-down">
+                    <div>
+                        <h2 class="fw-bold mb-1">Global User Management</h2>
+                        <p class="text-muted mb-0">Total active entities on platform: <span class="text-dark fw-bold" id="total-active-count">0</span></p>
+                    </div>
+                </div>
+
+                <!-- Control Bar -->
+                <div class="card-enterprise border-0 shadow-sm p-3 mb-4" data-aos="fade-up">
+                    <div class="row g-3 align-items-center">
+                        <div class="col-md-4">
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-0"><i class="fa-solid fa-magnifying-glass small"></i></span>
+                                <input type="text" class="form-control bg-light border-0" id="search-users-input" oninput="filterAndRender()" placeholder="Search by name, organization, or email...">
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <select class="form-select bg-light border-0" id="filter-verified-select" onchange="filterAndRender()">
+                                <option value="ALL">Verification: All</option>
+                                <option value="VERIFIED">Verified</option>
+                                <option value="UNVERIFIED">Unverified</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <select class="form-select bg-light border-0" id="filter-role-select" onchange="filterAndRender()">
+                                <option value="ALL">Role: All</option>
+                                <option value="DONOR">Donor</option>
+                                <option value="NGO">NGO</option>
+                                <option value="ADMIN">Admin</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 text-md-end d-flex gap-2 justify-content-md-end">
+                            <button class="btn btn-outline-secondary px-4" id="export-users-btn" onclick="exportUsersCSV()" aria-label="Export user list to CSV">
+                                <i class="fa-solid fa-file-export me-2" aria-hidden="true"></i>Export
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- User Table -->
+                <div class="card-enterprise shadow-sm" data-aos="fade-up" data-aos-delay="100">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle" id="users-table">
+                            <thead class="bg-light">
+                                <tr class="small uppercase ls-1">
+                                    <th class="border-0 px-4">Entity User</th>
+                                    <th class="border-0">Role</th>
+                                    <th class="border-0">Phone Number</th>
+                                    <th class="border-0">Joined Date</th>
+                                    <th class="border-0">Verification</th>
+                                    <th class="border-0">Database ID</th>
+                                    <th class="border-0 text-end px-4">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="users-tbody">
+                                <tr>
+                                    <td colspan="7" class="text-center py-4 text-muted">
+                                        <div class="spinner-border spinner-border-sm text-primary me-2"></div>
+                                        Loading users...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="p-4 border-top d-flex justify-content-between align-items-center bg-light">
+                        <div class="small text-muted" id="pagination-info">Showing 0 of 0 platform users</div>
+                        <nav>
+                            <ul class="pagination pagination-sm mb-0" id="pagination-controls">
+                                <!-- Loaded dynamically -->
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <nav th:replace="~{fragments/common :: scripts}"></nav>
+    <script>
+        let allUsers = [];
+        let filteredUsers = [];
+        let currentPage = 1;
+        const pageSize = 10;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadUsers();
+        });
+
+        async function loadUsers() {
+            try {
+                const stats = await window.api.get('/admin/stats').catch(() => ({ totalUsers: 0 }));
+                const totalUsersCount = stats.totalUsers ?? 0;
+                document.getElementById('total-active-count').textContent = totalUsersCount.toLocaleString();
+
+                const data = await window.api.get('/admin/users?size=500');
+                allUsers = data || [];
+                filterAndRender();
+            } catch (err) {
+                console.error("Failed to load users:", err);
+                const tbody = document.getElementById('users-tbody');
+                if (tbody) {
+                    tbody.innerHTML = `<tr><td colspan="7" class="text-center text-danger py-4">Unable to load live data. <button class="btn btn-sm btn-outline-danger ms-2" onclick="loadUsers()">Retry</button></td></tr>`;
+                }
+            }
+        }
+
+        function filterAndRender() {
+            const searchQuery = document.getElementById('search-users-input').value.toLowerCase().trim();
+            const filterVerified = document.getElementById('filter-verified-select').value;
+            const filterRole = document.getElementById('filter-role-select').value;
+
+            filteredUsers = allUsers.filter(u => {
+                const matchesSearch = !searchQuery || 
+                    (u.id && u.id.toString().includes(searchQuery)) ||
+                    (u.name && u.name.toLowerCase().includes(searchQuery)) ||
+                    (u.email && u.email.toLowerCase().includes(searchQuery)) ||
+                    (u.phone && u.phone.toLowerCase().includes(searchQuery));
+
+                let matchesVerified = true;
+                if (filterVerified === 'VERIFIED') matchesVerified = u.verified === true;
+                if (filterVerified === 'UNVERIFIED') matchesVerified = u.verified === false;
+
+                let matchesRole = true;
+                if (filterRole !== 'ALL') {
+                    matchesRole = u.role === ('ROLE_' + filterRole);
+                }
+
+                return matchesSearch && matchesVerified && matchesRole;
+            });
+
+            currentPage = 1;
+            renderTablePage();
+        }
+
+        function renderTablePage() {
+            const tbody = document.getElementById('users-tbody');
+            if (!tbody) return;
+
+            if (filteredUsers.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">No users found.</td></tr>';
+                document.getElementById('pagination-info').textContent = 'Showing 0 of 0 platform users';
+                document.getElementById('pagination-controls').innerHTML = '';
+                return;
+            }
+
+            const totalPages = Math.ceil(filteredUsers.length / pageSize);
+            if (currentPage > totalPages) currentPage = totalPages;
+            if (currentPage < 1) currentPage = 1;
+
+            const startIndex = (currentPage - 1) * pageSize;
+            const paginated = filteredUsers.slice(startIndex, startIndex + pageSize);
+
+            tbody.innerHTML = paginated.map(u => {
+                const isNgo = u.role === 'ROLE_NGO';
+                const isDonor = u.role === 'ROLE_DONOR';
+                const isAdmin = u.role === 'ROLE_ADMIN';
+                const roleBadge = isAdmin ? 'bg-dark text-white' : (isNgo ? 'bg-primary bg-opacity-10 text-primary' : 'bg-success bg-opacity-10 text-success');
+                const roleText = u.role ? u.role.replace('ROLE_', '') : 'USER';
+
+                const verifiedBadge = u.verified ? 
+                    '<span class="badge bg-success bg-opacity-10 text-success fw-bold px-3">VERIFIED</span>' :
+                    '<span class="badge bg-warning bg-opacity-10 text-warning fw-bold px-3">UNVERIFIED</span>';
+
+                const joinedDate = u.createdAt ? new Date(u.createdAt).toLocaleDateString() : 'N/A';
+
+                const toggleVerifyAction = u.verified ? 
+                    `<li><a class="dropdown-item small py-2 rounded-2" href="#" onclick="toggleVerification(${u.id}, false)"><i class="fa-solid fa-user-slash me-2 text-warning"></i> Unverify Account</a></li>` :
+                    `<li><a class="dropdown-item small py-2 rounded-2" href="#" onclick="toggleVerification(${u.id}, true)"><i class="fa-solid fa-user-check me-2 text-success"></i> Verify Account</a></li>`;
+
+                return `
+                    <tr>
+                        <td class="px-4">
+                            <div class="d-flex align-items-center gap-3">
+                                <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(u.name || 'User')}&background=random" class="rounded-circle" width="40">
+                                <div>
+                                    <div class="fw-bold text-dark lh-1">${u.name || 'User'}</div>
+                                    <span class="extra-small text-muted">${u.email}</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td><span class="badge ${roleBadge} fw-bold px-3">${roleText}</span></td>
+                        <td><span class="small fw-semibold">${u.phone || 'N/A'}</span></td>
+                        <td><span class="small text-muted">${joinedDate}</span></td>
+                        <td>${verifiedBadge}</td>
+                        <td class="small fw-bold">#USR-${u.id}</td>
+                        <td class="text-end px-4">
+                            <div class="dropdown">
+                                <button class="btn btn-light btn-sm rounded-circle p-0" style="width: 32px; height: 32px;" type="button" data-bs-toggle="dropdown">
+                                    <i class="fa-solid fa-ellipsis-vertical"></i>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 p-2">
+                                    ${toggleVerifyAction}
+                                    <li><a class="dropdown-item small py-2 rounded-2 text-danger" href="#" onclick="deleteUser(${u.id})"><i class="fa-solid fa-trash me-2"></i> Delete/Reject User</a></li>
+                                </ul>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            const endIndex = Math.min(startIndex + pageSize, filteredUsers.length);
+            document.getElementById('pagination-info').textContent = `Showing ${startIndex + 1}-${endIndex} of ${filteredUsers.length} platform users`;
+
+            let controlsHtml = '';
+            controlsHtml += `<li class="page-item ${currentPage === 1 ? 'disabled' : ''}"><a class="page-link" href="#" onclick="changePage(${currentPage - 1})">Prev</a></li>`;
+            for (let i = 1; i <= totalPages; i++) {
+                controlsHtml += `<li class="page-item ${i === currentPage ? 'active' : ''}"><a class="page-link" href="#" onclick="changePage(${i})">${i}</a></li>`;
+            }
+            controlsHtml += `<li class="page-item ${currentPage === totalPages ? 'disabled' : ''}"><a class="page-link" href="#" onclick="changePage(${currentPage + 1})">Next</a></li>`;
+            document.getElementById('pagination-controls').innerHTML = controlsHtml;
+        }
+
+        function changePage(page) {
+            currentPage = page;
+            renderTablePage();
+        }
+
+        async function toggleVerification(userId, verified) {
+            if (!window.api) return;
+            try {
+                await window.api.patch(`/admin/users/${userId}/verify`, { verified: verified });
+                if (window.showToast) window.showToast(`User verification status updated to ${verified ? 'Verified' : 'Unverified'}.`, 'success');
+                await loadUsers();
+            } catch (err) {
+                console.error("Failed to update user verification:", err);
+                if (window.showToast) window.showToast("Failed to update verification status: " + err.message, "error");
+            }
+        }
+
+        async function deleteUser(userId) {
+            if (!window.api) return;
+            if (!confirm("Are you sure you want to delete/reject this user? This action is permanent and handles foreign keys.")) return;
+            try {
+                await window.api.delete(`/admin/users/${userId}`);
+                if (window.showToast) window.showToast("User deleted successfully.", "success");
+                await loadUsers();
+            } catch (err) {
+                console.error("Failed to delete user:", err);
+                if (window.showToast) window.showToast("Failed to delete user: " + err.message, "error");
+            }
+        }
+
+        function exportUsersCSV() {
+            if (!window.reportGenerator || allUsers.length === 0) return;
+            const dataToExport = allUsers.map(u => ({
+                Id: u.id,
+                Name: u.name,
+                Email: u.email,
+                Role: u.role,
+                Verified: u.verified,
+                Phone: u.phone || 'N/A'
+            }));
+            window.reportGenerator.exportToCSV(dataToExport, 'Platform_Users_Export');
+            if (window.showToast) window.showToast('User list export started!', 'success');
+        }
+    </script>
+    <style>
+        .ls-1 { letter-spacing: 0.05em; }
+        .uppercase { text-transform: uppercase; }
+        .extra-small { font-size: 0.65rem; }
+    </style>
+</body>
+</html>

@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/common :: head('Upload Food Donation')}"></head>
+<body>
+
+    <div class="app-wrapper">
+        <aside th:replace="~{fragments/sidebar :: sidebar('upload', 'DONOR')}"></aside>
+
+        <div class="main-container">
+            <nav th:replace="~{fragments/navbar :: navbar}"></nav>
+
+            <main class="content-body">
+                <div class="mb-5" data-aos="fade-down">
+                    <h2 class="fw-bold mb-1">New Food Donation</h2>
+                    <p class="text-muted">Fill in the details or use our <span class="text-success fw-bold">AI-assisted rule-based analysis</span> for instant analysis.</p>
+                </div>
+
+                <div class="row g-4">
+                    <!-- Left: Form -->
+                    <div class="col-lg-7" data-aos="fade-right">
+                        <div class="card-enterprise">
+                            <form id="donationForm">
+                                <div class="row g-4">
+                                    <div class="col-12">
+                                        <label class="form-label small fw-bold text-muted uppercase">Donation Title</label>
+                                        <input type="text" class="form-control py-2 fs-6" id="foodTitle" placeholder="e.g. 50 Fresh Sandwiches & Side Salads" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold text-muted uppercase">Food Category</label>
+                                        <select class="form-select py-2 fs-6" id="foodCategory">
+                                            <option value="cooked">Cooked Meals</option>
+                                            <option value="produce">Fresh Produce (Veg/Fruit)</option>
+                                            <option value="bakery">Bakery & Bread</option>
+                                            <option value="packaged">Packaged Goods</option>
+                                            <option value="dairy">Dairy & Eggs</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold text-muted uppercase">Quantity (KG)</label>
+                                        <input type="number" class="form-control py-2 fs-6" id="foodQty" placeholder="0.0" step="0.1" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold text-muted uppercase">Expiry Time (Hours)</label>
+                                        <div class="input-group">
+                                            <input type="number" class="form-control py-2 fs-6" id="foodExpiry" placeholder="12" required>
+                                            <span class="input-group-text bg-light border-start-0 text-muted small">Hrs</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold text-muted uppercase">Pickup Urgency</label>
+                                        <div class="d-flex gap-2">
+                                            <input type="radio" class="btn-check" name="urgency" id="urgencyLow" value="LOW">
+                                            <label class="btn btn-outline-success btn-sm flex-fill" for="urgencyLow">Standard</label>
+                                            <input type="radio" class="btn-check" name="urgency" id="urgencyHigh" value="HIGH" checked>
+                                            <label class="btn btn-outline-danger btn-sm flex-fill" for="urgencyHigh">Urgent</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label small fw-bold text-muted uppercase">Special Notes / Allergen Info</label>
+                                        <textarea class="form-control py-2 fs-6" id="foodNotes" rows="3" placeholder="Any specific handling instructions or ingredient details..."></textarea>
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label small fw-bold text-muted uppercase">Pickup Address</label>
+                                        <input type="text" class="form-control py-2 fs-6" id="pickupAddress" placeholder="e.g. 12 Market Lane, Pune, Maharashtra" required>
+                                        <div class="form-text small">Where should the NGO collect the food from?</div>
+                                    </div>
+                                    <div class="col-12 mt-4 pt-3 border-top">
+                                        <button type="submit" class="btn btn-enterprise btn-enterprise-primary w-100 py-3">
+                                            Submit Donation Response <i class="fa-solid fa-paper-plane ms-2"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Right: AI Vision Assistant -->
+                    <div class="col-lg-5" data-aos="fade-left" data-aos-delay="100">
+                        <div class="card-enterprise border-primary bg-primary bg-opacity-10 border-opacity-25 h-100">
+                            <div class="text-center mb-4">
+                                <div class="bg-primary bg-opacity-20 text-primary p-3 rounded-circle d-inline-flex mb-3">
+                                    <i class="fa-solid fa-brain fs-3"></i>
+                                </div>
+                                <h5 class="fw-bold">AI-assisted rule-based analysis</h5>
+                                <p class="small text-muted mb-0">Upload a photo to auto-fill the form using computer vision.</p>
+                            </div>
+
+                            <div class="ai-upload-zone p-5 border-2 border-dashed border-primary rounded-4 text-center cursor-pointer mb-4 bg-white" onclick="simulateAIAnalysis()">
+                                <div id="uploadNormal">
+                                    <i class="fa-solid fa-camera-retro fs-1 text-primary opacity-50 mb-3"></i>
+                                    <p class="mb-0 fw-semibold text-dark">Click or Drag Image</p>
+                                    <p class="small text-muted mb-0">JPEG, PNG up to 10MB</p>
+                                </div>
+                                <div id="uploadAnalyzing" style="display: none;">
+                                    <div class="spinner-border text-primary mb-3" role="status"></div>
+                                    <p class="mb-0 fw-semibold text-primary">Analyzing Food Assets...</p>
+                                    <p class="small text-muted mb-0">Comparing against global datasets</p>
+                                </div>
+                            </div>
+
+                            <div class="ai-results shadow-sm rounded-4 p-4 bg-white" id="aiResults" style="display: none;">
+                                <h6 class="fw-bold mb-3 d-flex align-items-center gap-2">
+                                    <i class="fa-solid fa-wand-magic-sparkles text-warning"></i> AI Suggestions
+                                </h6>
+                                <div class="d-flex flex-column gap-3">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="small text-muted">Detected Type:</span>
+                                        <span class="badge bg-success bg-opacity-10 text-success fw-bold">Mixed Sandwiches</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="small text-muted">Estimated Qty:</span>
+                                        <span class="fw-bold">~ 12.5 kg</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="small text-muted">Freshness Index:</span>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="progress" style="width: 60px; height: 6px;">
+                                                <div class="progress-bar bg-success" style="width: 95%"></div>
+                                            </div>
+                                            <span class="small fw-bold">95%</span>
+                                        </div>
+                                    </div>
+                                    <button class="btn btn-primary btn-sm w-100 mt-2" onclick="applyAISuggestions()">Apply to Form</button>
+                                </div>
+                            </div>
+
+                            <div class="mt-4 pt-3 border-top border-primary border-opacity-10 opacity-75">
+                                <div class="d-flex align-items-start gap-2 small">
+                                    <i class="fa-solid fa-shield-halved text-success mt-1"></i>
+                                    <div>
+                                        <p class="mb-1 fw-bold text-dark">Enterprise Compliance</p>
+                                        <p class="mb-0 text-muted">Our AI vision follows global food safety visual standards (v2.4).</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+
+            <!-- ── NGO Selection Panel — appears after donation created ── -->
+            <div id="ngo-selection-panel" style="display:none;" class="container-fluid px-4 py-5 bg-light border-top">
+                <div class="container-xxl">
+                    <div class="d-flex align-items-center gap-3 mb-4">
+                        <div class="bg-success bg-opacity-10 text-success p-3 rounded-circle">
+                            <i class="fa-solid fa-circle-check fs-4"></i>
+                        </div>
+                        <div>
+                            <h4 class="fw-bold mb-1">Donation Created Successfully! 🎉</h4>
+                            <p class="text-muted mb-0">Now select an NGO to send your donation request to.</p>
+                        </div>
+                    </div>
+                    <div class="row g-3" id="ngo-cards-container">
+                        <div class="text-center py-5 text-muted"><i class="fa-solid fa-spinner fa-spin fs-3"></i></div>
+                    </div>
+                    <div class="mt-4 text-center">
+                        <a href="/donor/tracking" class="btn btn-outline-secondary rounded-pill px-4">
+                            <i class="fa-solid fa-route me-2"></i>Skip — Track my donations later
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <nav th:replace="~{fragments/common :: scripts}"></nav>
+    <!-- Load donation-request.js for the NGO selector workflow -->
+    <script th:src="@{/js/donation-request.js}"></script>
+    <script>
+        // ── NGO Selection Panel — shown after a donation is successfully created ──
+        let _lastCreatedDonationId = null;
+
+        async function showNgoSelectionPanel(donationId) {
+            _lastCreatedDonationId = donationId;
+            document.getElementById('ngo-selection-panel').style.display = 'block';
+            document.getElementById('ngo-selection-panel').scrollIntoView({ behavior: 'smooth' });
+            await loadNgosForSelection();
+        }
+
+        async function loadNgosForSelection() {
+            const container = document.getElementById('ngo-cards-container');
+            container.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-success" role="status"></div><p class="mt-2 text-muted">Finding nearby NGOs...</p></div>';
+            try {
+                const ngos = await window.drService.loadAvailableNgos();
+                if (!ngos || ngos.length === 0) {
+                    container.innerHTML = '<p class="text-muted text-center py-4">No NGOs currently available. Your donation is listed and NGOs can see it.</p>';
+                    return;
+                }
+                container.innerHTML = ngos.map(ngo => `
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card border rounded-4 p-3 h-100 shadow-sm" style="border-color: var(--border-color) !important;">
+                            <div class="d-flex align-items-center gap-3 mb-3">
+                                <div class="bg-primary bg-opacity-10 text-primary p-3 rounded-circle">
+                                    <i class="fa-solid fa-building-ngo fs-5"></i>
+                                </div>
+                                <div>
+                                    <h6 class="fw-bold mb-0">${ngo.name}</h6>
+                                    ${ngo.verified ? '<span class="badge bg-success bg-opacity-10 text-success small">✓ Verified</span>' : '<span class="badge bg-secondary bg-opacity-10 text-secondary small">Unverified</span>'}
+                                </div>
+                            </div>
+                            <div class="small text-muted mb-2">${ngo.address ? '<i class="fa-solid fa-location-dot me-1"></i>' + ngo.address : 'Location not available'}</div>
+                            ${ngo.phone ? `<div class="small text-muted mb-3"><i class="fa-solid fa-phone me-1"></i>${ngo.phone}</div>` : ''}
+                            <button class="btn btn-enterprise btn-enterprise-primary w-100 mt-auto rounded-pill"
+                                id="send-req-btn-${ngo.id}"
+                                onclick="sendRequestToNgo(${ngo.id}, '${ngo.name.replace(/'/g,"\\'")}')">
+                                <i class="fa-solid fa-paper-plane me-2"></i>Send Request
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (err) {
+                container.innerHTML = `<p class="text-danger text-center py-4">Could not load NGOs: ${err.message}</p>`;
+            }
+        }
+
+        async function sendRequestToNgo(ngoId, ngoName) {
+            if (!_lastCreatedDonationId) { alert('Please submit a donation first.'); return; }
+            if (!confirm(`Send this food donation request to ${ngoName}?`)) return;
+            const btn = document.getElementById('send-req-btn-' + ngoId);
+            if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Sending...'; }
+            try {
+                await window.drService.createRequest(_lastCreatedDonationId, ngoId);
+                if (btn) { btn.innerHTML = '<i class="fa-solid fa-check me-2"></i>Request Sent!'; btn.classList.replace('btn-enterprise-primary', 'btn-success'); }
+                if (window.showToast) window.showToast(`Request sent to ${ngoName}! Status: PENDING`, 'success');
+            } catch (err) {
+                if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-paper-plane me-2"></i>Send Request'; }
+                if (window.showToast) window.showToast('Error: ' + err.message, 'error');
+            }
+        }
+        // ── AI Vision Workflow Integration ──────────────────────────────────────
+        let lastAiResult = null;
+
+        // Replace static click handler with real file input
+        const aiUploadZone = document.querySelector('.ai-upload-zone');
+        const fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.accept = 'image/*';
+        fileInput.style.display = 'none';
+        fileInput.id = 'ai-file-input';
+        fileInput.setAttribute('aria-label', 'Upload food image for AI analysis');
+        document.body.appendChild(fileInput);
+
+        // Wire click on zone to file picker
+        aiUploadZone.removeAttribute('onclick');
+        aiUploadZone.setAttribute('role', 'button');
+        aiUploadZone.setAttribute('aria-label', 'Click to upload food image for AI analysis');
+        aiUploadZone.setAttribute('tabindex', '0');
+        aiUploadZone.addEventListener('click', () => fileInput.click());
+        aiUploadZone.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileInput.click(); }
+        });
+
+        // Handle drag-and-drop
+        aiUploadZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            aiUploadZone.style.background = 'rgba(16, 185, 129, 0.08)';
+        });
+        aiUploadZone.addEventListener('dragleave', () => {
+            aiUploadZone.style.background = '';
+        });
+        aiUploadZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            aiUploadZone.style.background = '';
+            const file = e.dataTransfer.files?.[0];
+            if (file && file.type.startsWith('image/')) processImageFile(file);
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files?.[0];
+            if (file) processImageFile(file);
+        });
+
+        async function processImageFile(file) {
+            const normal = document.getElementById('uploadNormal');
+            const analyzing = document.getElementById('uploadAnalyzing');
+            const results = document.getElementById('aiResults');
+
+            // Show analyzing state
+            normal.style.display = 'none';
+            analyzing.style.display = 'block';
+            results.style.display = 'none';
+
+            try {
+                // Convert file to base64
+                const base64 = await fileToBase64(file);
+
+                // Call real ai-workflow (which calls backend or falls back to mock)
+                const result = await window.aiWorkflow.analyzeImage(base64);
+                lastAiResult = result;
+
+                // Populate results UI dynamically
+                renderAIResults(result);
+
+                analyzing.style.display = 'none';
+                normal.style.display = 'block';
+                results.style.display = 'block';
+                results.classList.add('animate__animated', 'animate__fadeInUp');
+
+                if (window.showToast) window.showToast('AI analysis complete! Review suggestions below.', 'success');
+
+            } catch (err) {
+                analyzing.style.display = 'none';
+                normal.style.display = 'block';
+                console.error('AI Analysis error:', err);
+                if (window.showToast) window.showToast('AI analysis unavailable. Please try again.', 'error');
+            }
+        }
+
+        function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => resolve(e.target.result);
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function renderAIResults(result) {
+            const container = document.getElementById('aiResults');
+            const freshnessPct = result.freshnessScore || 95;
+            const urgencyLabel = result.urgency === 'HIGH' ? '🔴 Urgent' : '🟢 Standard';
+            const safetyBadge = result.isSafe
+                ? '<span class="badge bg-success bg-opacity-10 text-success fw-bold">SAFE FOR RESCUE</span>'
+                : '<span class="badge bg-danger bg-opacity-10 text-danger fw-bold">REQUIRES INSPECTION</span>';
+
+            container.innerHTML = `
+                <h6 class="fw-bold mb-3 d-flex align-items-center gap-2">
+                    <i class="fa-solid fa-wand-magic-sparkles text-warning" aria-hidden="true"></i> AI Suggestions
+                    <span class="badge bg-primary bg-opacity-10 text-primary ms-auto fw-normal small">${result.confidence?.toFixed(1) || '—'}% Confidence</span>
+                </h6>
+                <div class="d-flex flex-column gap-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="small text-muted">Detected Type:</span>
+                        <span class="badge bg-success bg-opacity-10 text-success fw-bold">${result.description || 'Unknown'}</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="small text-muted">Estimated Qty:</span>
+                        <span class="fw-bold">~ ${result.estimatedWeightKg || '—'} kg</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="small text-muted">Freshness Index:</span>
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="progress" style="width: 60px; height: 6px;" role="progressbar" aria-label="Freshness score" aria-valuenow="${freshnessPct}" aria-valuemin="0" aria-valuemax="100">
+                                <div class="progress-bar bg-success" style="width: ${freshnessPct}%"></div>
+                            </div>
+                            <span class="small fw-bold">${freshnessPct}%</span>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="small text-muted">Safety Status:</span>
+                        ${safetyBadge}
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="small text-muted">Pickup Urgency:</span>
+                        <span class="small fw-bold">${urgencyLabel}</span>
+                    </div>
+                    <button class="btn btn-primary btn-sm w-100 mt-2" 
+                            id="apply-ai-btn"
+                            onclick="applyAISuggestions()"
+                            aria-label="Apply AI suggestions to the donation form">
+                        <i class="fa-solid fa-wand-magic-sparkles me-2" aria-hidden="true"></i>Apply to Form
+                    </button>
+                </div>
+            `;
+        }
+
+        function applyAISuggestions() {
+            if (!lastAiResult) return;
+
+            const categoryMap = { produce: 'produce', bakery: 'bakery', dairy: 'dairy', packaged: 'packaged' };
+            const detectedCategory = lastAiResult.category?.toLowerCase();
+
+            document.getElementById('foodTitle').value = lastAiResult.description || 'AI Analyzed Donation';
+            document.getElementById('foodCategory').value = categoryMap[detectedCategory] || 'cooked';
+            document.getElementById('foodQty').value = lastAiResult.estimatedWeightKg || '';
+            document.getElementById('foodExpiry').value = lastAiResult.urgency === 'HIGH' ? 4 : 18;
+
+            // Set urgency radio
+            const urgencyRadio = document.getElementById(lastAiResult.urgency === 'HIGH' ? 'urgencyHigh' : 'urgencyLow');
+            if (urgencyRadio) urgencyRadio.checked = true;
+
+            if (window.showToast) window.showToast('AI suggestions applied to the form!', 'success');
+
+            // Smooth scroll to form
+            document.getElementById('donationForm')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        // ── Donation Form Submit via API Service ──────────────────────────────
+        document.getElementById('donationForm')?.addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const btn = this.querySelector('button[type="submit"]');
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Submitting...';
+
+            const urgencyEl = document.querySelector('input[name="urgency"]:checked');
+
+            // ── FIX: Field names must match FoodDonationRequest DTO exactly ──
+            const payload = {
+                title:            document.getElementById('foodTitle').value,
+                foodCategory:     document.getElementById('foodCategory').value,
+                quantityKg:       parseFloat(document.getElementById('foodQty').value),
+                hoursUntilExpiry: parseInt(document.getElementById('foodExpiry').value),
+                urgency:          urgencyEl ? urgencyEl.value : 'HIGH',
+                notes:            document.getElementById('foodNotes')?.value || '',
+                pickupAddress:    document.getElementById('pickupAddress').value  // auto-creates location
+            };
+
+            try {
+                // ── FIX: Correct endpoint is /api/food (was /api/donations) ──
+                const created = await window.api.post('/food', payload);
+                if (window.showToast) window.showToast('Donation submitted! Now select an NGO to notify.', 'success');
+                btn.innerHTML = '<i class="fa-solid fa-check me-2"></i>Submitted!';
+                btn.classList.add('btn-success');
+                // Show NGO selection panel with the newly created donation ID
+                const donationId = created && created.id ? created.id : null;
+                if (donationId) {
+                    showNgoSelectionPanel(donationId);
+                } else {
+                    setTimeout(() => { window.location.href = '/donor/dashboard'; }, 2000);
+                }
+            } catch (err) {
+                const msg = err.message || 'Unknown error';
+                if (window.showToast) window.showToast(`Submission failed: ${msg}`, 'warning');
+                console.error('[Donation Submit Error]', err);
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        });
+    </script>
+    <style>
+        .ai-upload-zone { transition: var(--transition); border-color: var(--primary) !important; }
+        .ai-upload-zone:hover, .ai-upload-zone:focus { background: rgba(16, 185, 129, 0.05) !important; transform: scale(1.02); outline: 2px solid var(--primary); }
+        .uppercase { text-transform: uppercase; }
+        .cursor-pointer { cursor: pointer; }
+    </style>
+</body>
+</html>
+

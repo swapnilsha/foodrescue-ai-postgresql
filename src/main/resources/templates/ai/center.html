@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/common :: head('AI Intelligence Center')}"></head>
+<body>
+
+    <div class="app-wrapper">
+        <aside th:replace="~{fragments/sidebar :: sidebar('ai', 'SHARED')}"></aside>
+
+        <div class="main-container">
+            <nav th:replace="~{fragments/navbar :: navbar}"></nav>
+
+            <main class="content-body">
+                <div class="mb-5 d-flex justify-content-between align-items-center" data-aos="fade-down">
+                    <div>
+                        <h2 class="fw-bold mb-1">AI Intelligence Command</h2>
+                        <p class="text-muted">Manage the neural networks powering food analysis and predictions.</p>
+                    </div>
+                </div>
+
+                <div class="row g-4">
+                    <!-- Model Performance -->
+                    <div class="col-lg-4" data-aos="fade-right">
+                        <div class="card-enterprise h-100">
+                            <h5 class="fw-bold mb-4">Neural Assets Status</h5>
+                            <div class="d-flex flex-column gap-3">
+                                <div class="p-3 bg-light rounded-4">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <span class="small fw-bold">FoodVision™ v4.2</span>
+                                        <span class="badge bg-success rounded-pill px-2">OPTIMAL</span>
+                                    </div>
+                                    <div class="extra-small text-muted mb-2">Accuracy: 99.4% • Latency: 140ms</div>
+                                    <div class="progress" style="height: 4px;">
+                                        <div class="progress-bar bg-success" style="width: 99%"></div>
+                                    </div>
+                                </div>
+                                <div class="p-3 bg-light rounded-4">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <span class="small fw-bold">DemandForecast™ v1.8</span>
+                                        <span class="badge bg-warning text-dark rounded-pill">TRAINING</span>
+                                    </div>
+                                    <div class="extra-small text-muted mb-2">Confidence: 85.2% • Next sync in 2h</div>
+                                    <div class="progress" style="height: 4px;">
+                                        <div class="progress-bar bg-warning" style="width: 85%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <button class="btn btn-outline-dark btn-sm w-100 mt-4 fw-bold">Launch Hyperparameter Suite</button>
+                        </div>
+                    </div>
+
+                    <!-- AI Insights / Predictive trends -->
+                    <div class="col-lg-8" data-aos="fade-left">
+                        <div class="card-enterprise h-100 bg-dark text-white border-0 shadow-lg" style="background: linear-gradient(135deg, #1e293b 0%, #020617 100%) !important;">
+                            <div class="d-flex justify-content-between align-items-center mb-5">
+                                <h5 class="fw-bold mb-0"><i class="fa-solid fa-sparkles text-info me-2"></i> Predicted Regional Waste (24h Window)</h5>
+                                <div class="small fw-bold text-info">Model Ref: PRED-X4</div>
+                            </div>
+                            <div class="chart-container" style="height: 280px;">
+                                <canvas id="aiPredictionChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Real-time Food Analysis Feed -->
+                    <div class="col-12" data-aos="fade-up">
+                        <div class="card-enterprise">
+                            <h5 class="fw-bold mb-4">Neural Vision Analysis Stream</h5>
+                            <div class="row g-3">
+                                <div class="col-md-3" th:each="i : ${#numbers.sequence(1, 4)}">
+                                    <div class="p-2 border rounded-4 bg-light text-center">
+                                        <img th:src="'https://images.unsplash.com/photo-' + (${i % 2 == 0} ? '1504674900247-0877df9cc836' : '1540189549336-e6e99c3679fe') + '?auto=format&fit=crop&q=80&w=200'" class="rounded-3 w-100 mb-2 object-fit-cover" style="height: 120px;">
+                                        <div class="small fw-bold">Batch Analysis Res: <span class="text-success">SAFE</span></div>
+                                        <div class="extra-small text-muted">Confidence: 98.<span th:text="${i * 2}"></span>%</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <nav th:replace="~{fragments/common :: scripts}"></nav>
+    <script>
+        // AI Prediction Chart
+        const predCtx = document.getElementById('aiPredictionChart').getContext('2d');
+        new Chart(predCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Bakeries', 'Buffets', 'Groceries', 'Caterers', 'Retail'],
+                datasets: [{
+                    label: 'Predicted kg Surplus',
+                    data: [1200, 2400, 1800, 950, 1400],
+                    backgroundColor: 'rgba(14, 165, 233, 0.6)',
+                    borderRadius: 12,
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { display: false }, border: { display: false }, ticks: { color: 'rgba(255,255,255,0.5)' } },
+                    y: { grid: { color: 'rgba(255,255,255,0.05)' }, border: { display: false }, ticks: { color: 'rgba(255,255,255,0.5)' } }
+                }
+            }
+        });
+    </script>
+    <style>
+        .extra-small { font-size: 0.65rem; }
+    </style>
+</body>
+</html>

@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/common :: head('Global Reports Center')}"></head>
+<body>
+
+    <div class="app-wrapper">
+        <aside th:replace="~{fragments/sidebar :: sidebar('reports', 'ADMIN')}"></aside>
+
+        <div class="main-container">
+            <nav th:replace="~{fragments/navbar :: navbar}"></nav>
+
+            <main class="content-body">
+                <div class="mb-5 d-flex justify-content-between align-items-center" data-aos="fade-down">
+                    <div>
+                        <h2 class="fw-bold mb-1">Global Reports & Fiscal Audit</h2>
+                        <p class="text-muted">Generate comprehensive data exports for stakeholders and regulators.</p>
+                    </div>
+                </div>
+
+                <div class="row g-4">
+                    <!-- Report Generator Config -->
+                    <div class="col-lg-4" data-aos="fade-right">
+                        <div class="card-enterprise p-4">
+                            <h5 class="fw-bold mb-4">Report Generator</h5>
+                            <form>
+                                <div class="mb-3">
+                                    <label class="form-label small fw-bold text-muted uppercase">Select Report Type</label>
+                                    <select class="form-select py-2" id="report-type-select">
+                                        <option>Impact & Social ROI</option>
+                                        <option>Financial Performance</option>
+                                        <option>NGO Efficiency Audit</option>
+                                        <option>Donor Waste Trends</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label small fw-bold text-muted uppercase">Date Range</label>
+                                    <div class="input-group">
+                                        <input type="date" class="form-control py-2">
+                                        <span class="input-group-text border-0 bg-light">to</span>
+                                        <input type="date" class="form-control py-2">
+                                    </div>
+                                </div>
+                                <div class="mb-4">
+                                    <label class="form-label small fw-bold text-muted uppercase">Output Format</label>
+                                    <div class="row g-2">
+                                        <div class="col-6">
+                                            <input type="radio" class="btn-check" name="format" id="fPdf" checked>
+                                            <label class="btn btn-outline-dark btn-sm w-100" for="fPdf"><i class="fa-solid fa-file-pdf me-2"></i> PDF</label>
+                                        </div>
+                                        <div class="col-6">
+                                            <input type="radio" class="btn-check" name="format" id="fXls">
+                                            <label class="btn btn-outline-dark btn-sm w-100" for="fXls"><i class="fa-solid fa-file-excel me-2"></i> Excel</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn btn-enterprise btn-enterprise-primary w-100 py-3 fw-bold" id="generate-report-btn" onclick="triggerReportGeneration()">
+                                    Generate Report <i class="fa-solid fa-gear fa-spin ms-2" style="display: none;"></i>
+                                </button>
+                                <div class="alert alert-danger mt-3 small p-2 clearfix" id="report-error-container" style="display: none;">
+                                    <span class="float-start mt-1">Unable to load live data.</span>
+                                    <button type="button" class="btn btn-sm btn-outline-danger float-end py-0 px-2" onclick="triggerReportGeneration()">Retry</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Recent Generated Reports -->
+                    <div class="col-lg-8" data-aos="fade-left">
+                        <div class="card-enterprise h-100">
+                            <h5 class="fw-bold mb-4">Historical Archive</h5>
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle">
+                                    <thead class="bg-light">
+                                        <tr class="extra-small uppercase ls-1 text-muted">
+                                            <th class="border-0 px-4">Filename</th>
+                                            <th class="border-0">Generated By</th>
+                                            <th class="border-0">Status</th>
+                                            <th class="border-0">Size</th>
+                                            <th class="border-0 text-end px-4">Download</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="reports-history-body">
+                                        <!-- Loaded dynamically -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <nav th:replace="~{fragments/common :: scripts}"></nav>
+    <script th:src="@{/js/report-generator.js}"></script>
+    <script>
+        let reportHistory = [];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            try {
+                const stored = localStorage.getItem('admin_report_history');
+                if (stored) {
+                    reportHistory = JSON.parse(stored);
+                }
+            } catch (e) {}
+            renderHistoryTable();
+        });
+
+        function renderHistoryTable() {
+            const tbody = document.getElementById('reports-history-body');
+            if (!tbody) return;
+
+            if (reportHistory.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4 small">No reports generated in this session yet.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = reportHistory.map((rep, idx) => `
+                <tr>
+                    <td class="px-4">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="fa-solid fa-file-csv text-success fs-4"></i>
+                            <span class="small fw-bold text-dark">${rep.filename}</span>
+                        </div>
+                    </td>
+                    <td class="small">${rep.generatedBy}</td>
+                    <td><span class="badge bg-success bg-opacity-10 text-success">READY</span></td>
+                    <td class="small text-muted">${rep.size}</td>
+                    <td class="text-end px-4">
+                        <button class="btn btn-light btn-sm rounded-circle" onclick="redownloadReport(${idx})" title="Download report"><i class="fa-solid fa-download"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        async function triggerReportGeneration() {
+            const reportType = document.getElementById('report-type-select').value;
+            const btn = document.getElementById('generate-report-btn');
+            const spinner = btn.querySelector('.fa-spin');
+            const errContainer = document.getElementById('report-error-container');
+            
+            if (errContainer) errContainer.style.display = 'none';
+            btn.disabled = true;
+            if (spinner) spinner.style.display = 'inline-block';
+
+            try {
+                let dataToExport = [];
+                let filename = 'Report';
+
+                if (reportType.includes('Impact') || reportType.includes('Trends') || reportType.includes('Performance')) {
+                    const donations = await window.api.get('/admin/donations?size=500');
+                    dataToExport = donations.map(d => ({
+                        Id: d.id,
+                        Title: d.title,
+                        Category: d.foodCategory,
+                        QuantityKg: d.quantityKg,
+                        Status: d.status,
+                        DonorName: d.donorName,
+                        DonorEmail: d.donorEmail,
+                        Location: d.locationAddress,
+                        NGO: d.acceptedByNgoName || 'None'
+                    }));
+                    filename = reportType.replace(/ /g, '_') + '_Export';
+                } else {
+                    const users = await window.api.get('/admin/users?size=500');
+                    dataToExport = users.map(u => ({
+                        Id: u.id,
+                        Name: u.name,
+                        Email: u.email,
+                        Role: u.role,
+                        Verified: u.verified,
+                        Phone: u.phone || 'N/A'
+                    }));
+                    filename = reportType.replace(/ /g, '_') + '_Export';
+                }
+
+                if (dataToExport.length === 0) {
+                    throw new Error("No records found in the database to export.");
+                }
+
+                if (window.reportGenerator) {
+                    await window.reportGenerator.exportToCSV(dataToExport, filename);
+                }
+
+                const newReport = {
+                    filename: filename + '.csv',
+                    generatedBy: 'Admin Workspace',
+                    size: (JSON.stringify(dataToExport).length / 1024).toFixed(1) + ' KB',
+                    data: dataToExport
+                };
+
+                reportHistory.unshift(newReport);
+                if (reportHistory.length > 10) reportHistory.pop();
+                
+                try {
+                    localStorage.setItem('admin_report_history', JSON.stringify(reportHistory));
+                } catch (e) {}
+
+                renderHistoryTable();
+                if (window.showToast) window.showToast('Report generated and downloaded successfully!', 'success');
+
+            } catch (err) {
+                console.error("Failed to generate report:", err);
+                if (window.showToast) window.showToast("Failed to compile report: " + err.message, "danger");
+                if (errContainer) {
+                    errContainer.style.display = 'block';
+                    errContainer.querySelector('span').textContent = 'Failed to generate report: ' + err.message;
+                }
+            } finally {
+                btn.disabled = false;
+                if (spinner) spinner.style.display = 'none';
+            }
+        }
+
+        function redownloadReport(idx) {
+            const rep = reportHistory[idx];
+            if (rep && window.reportGenerator) {
+                window.reportGenerator.exportToCSV(rep.data, rep.filename.replace('.csv', ''));
+            }
+        }
+    </script>
+    <style>
+        .ls-1 { letter-spacing: 0.1em; }
+        .uppercase { text-transform: uppercase; }
+        .extra-small { font-size: 0.65rem; }
+    </style>
+</body>
+</html>

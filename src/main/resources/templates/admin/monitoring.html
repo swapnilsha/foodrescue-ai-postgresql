@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/common :: head('Platform Monitoring')}"></head>
+<body>
+
+    <div class="app-wrapper">
+        <aside th:replace="~{fragments/sidebar :: sidebar('monitoring', 'ADMIN')}"></aside>
+
+        <div class="main-container">
+            <nav th:replace="~{fragments/navbar :: navbar}"></nav>
+
+            <main class="content-body">
+                <div class="d-flex justify-content-between align-items-center mb-5" data-aos="fade-down">
+                    <div>
+                        <h2 class="fw-bold mb-1">Live Donation Monitoring</h2>
+                        <p class="text-muted">Real-time status tracking of all active rescue missions worldwide.</p>
+                    </div>
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge bg-success rounded-circle p-2" id="ws-status-dot" aria-label="WebSocket status"></span>
+                            <span class="small text-muted fw-bold" id="ws-status-text">Connecting…</span>
+                        </div>
+                        <button class="btn btn-sm btn-outline-dark" onclick="clearLiveTable()" aria-label="Clear live monitoring table">
+                            <i class="fa-solid fa-trash-can me-1"></i> Clear
+                        </button>
+                    </div>
+                </div>
+
+                <div class="row g-4">
+                    <!-- Global Monitoring Activity -->
+                    <div class="col-lg-8" data-aos="fade-right">
+                        <div class="card-enterprise shadow-sm p-0 overflow-hidden h-100">
+                            <div class="nav nav-tabs px-4 pt-3 bg-light border-0">
+                                <button class="nav-link active border-0 bg-transparent py-3 fw-bold small uppercase ls-1" data-bs-toggle="tab" data-bs-target="#tab-missions">Active Rescue Missions</button>
+                                <button class="nav-link border-0 bg-transparent py-3 fw-bold small uppercase ls-1" data-bs-toggle="tab" data-bs-target="#tab-donations" onclick="loadDonationWatch()">Surplus Food Donations</button>
+                            </div>
+                            
+                            <div class="tab-content p-4 bg-white">
+                                <!-- Active Rescue Missions Tab -->
+                                <div class="tab-pane fade show active" id="tab-missions">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover align-middle">
+                                            <thead>
+                                                <tr class="small uppercase ls-1 text-muted">
+                                                    <th class="border-0">Mission ID</th>
+                                                    <th class="border-0">Donor ➡️ NGO</th>
+                                                    <th class="border-0">Food Item & Qty</th>
+                                                    <th class="border-0">Assigned Driver</th>
+                                                    <th class="border-0">Status</th>
+                                                    <th class="border-0 text-end">Requested At</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="monitoring-live-body">
+                                                <tr>
+                                                    <td colspan="6" class="text-center text-muted py-4 small">Loading active rescue missions...</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                
+                                <!-- Surplus Food Donations Tab -->
+                                <div class="tab-pane fade" id="tab-donations">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover align-middle">
+                                            <thead>
+                                                <tr class="small uppercase ls-1 text-muted">
+                                                    <th class="border-0">Donation ID</th>
+                                                    <th class="border-0">Food Category & Title</th>
+                                                    <th class="border-0">Donor Email</th>
+                                                    <th class="border-0">Quantity</th>
+                                                    <th class="border-0">Location</th>
+                                                    <th class="border-0">Status</th>
+                                                    <th class="border-0 text-end">Expiry Time</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="monitoring-donations-body">
+                                                <tr>
+                                                    <td colspan="7" class="text-center text-muted py-4 small">Loading surplus food donations...</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Platform Heatmaps & Trends -->
+                    <div class="col-lg-4" data-aos="fade-left">
+                        <div class="card-enterprise mb-4">
+                            <h6 class="fw-bold mb-4 uppercase small ls-1 text-muted">Waste Critical Zones</h6>
+                            <div class="d-flex flex-column gap-3">
+                                <div class="p-3 bg-light rounded-4 d-flex justify-content-between align-items-center">
+                                    <span class="small fw-bold">Downtown Core</span>
+                                    <span class="badge bg-danger rounded-pill">High Activity</span>
+                                </div>
+                                <div class="p-3 bg-light rounded-4 d-flex justify-content-between align-items-center">
+                                    <span class="small fw-bold">Financial District</span>
+                                    <span class="badge bg-warning text-dark rounded-pill">Elevated</span>
+                                </div>
+                                <div class="p-3 bg-light rounded-4 d-flex justify-content-between align-items-center">
+                                    <span class="small fw-bold">Suburban West</span>
+                                    <span class="badge bg-success rounded-pill">Normal</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card-enterprise bg-primary text-white p-4">
+                            <h6 class="fw-bold mb-2">AI Forecasting</h6>
+                            <p class="small opacity-75 mb-4">Predicting a <span class="fw-bold">12% surge</span> in bakery surplus tomorrow morning due to regional public holidays.</p>
+                            <button class="btn btn-white btn-sm w-100 fw-bold">Adjust System Sensitivity</button>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <nav th:replace="~{fragments/common :: scripts}"></nav>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            loadLiveStats();
+            loadDonationWatch();
+
+            if (window.wsService) {
+                if (!window.wsService.isConnected) {
+                    window.wsService.connect();
+                }
+
+                setInterval(() => {
+                    const dot = document.getElementById('ws-status-dot');
+                    const text = document.getElementById('ws-status-text');
+                    if (dot && text) {
+                        if (window.wsService.isConnected) {
+                            dot.style.backgroundColor = '#10b981';
+                            text.textContent = 'Live Feed Connected';
+                        } else {
+                            dot.style.backgroundColor = '#ef4444';
+                            text.textContent = 'Offline — Reconnecting';
+                        }
+                    }
+                }, 3000);
+
+                window.wsService.on('new_donation', (msg) => {
+                    loadLiveStats();
+                    loadDonationWatch();
+                });
+
+                window.wsService.on('donation_update', (msg) => {
+                    loadLiveStats();
+                    loadDonationWatch();
+                });
+            } else {
+                document.getElementById('ws-status-text').textContent = 'Service unavailable';
+            }
+        });
+
+        function statusColor(status) {
+            const map = { PENDING: 'warning', ACCEPTED: 'primary', ASSIGNED: 'info', PICKUP_IN_PROGRESS: 'secondary', COLLECTED: 'success', RECEIVED: 'success', DELIVERED: 'success', EXPIRED: 'danger' };
+            return map[status] || 'secondary';
+        }
+
+        async function loadLiveStats() {
+            if (!window.api) return;
+            try {
+                const data = await window.api.get('/admin/active-missions');
+                const tbody = document.getElementById('monitoring-live-body');
+                if (tbody) {
+                    if (data && data.length > 0) {
+                        tbody.innerHTML = '';
+                        data.forEach(m => {
+                            const row = document.createElement('tr');
+                            row.innerHTML = `
+                                <td class="fw-bold">#MSN-${m.id}</td>
+                                <td>
+                                    <div class="small fw-bold text-dark">${m.donorName}</div>
+                                    <div class="extra-small text-primary"><i class="fa-solid fa-arrow-right"></i> ${m.ngoName}</div>
+                                </td>
+                                <td>
+                                    <div class="small fw-bold text-dark">${m.title}</div>
+                                    <div class="extra-small text-muted">${m.quantityKg} kg</div>
+                                </td>
+                                <td class="small fw-semibold text-muted">${m.assignedToName || 'Not Assigned'}</td>
+                                <td>
+                                    <span class="badge bg-${statusColor(m.status)} bg-opacity-10 text-${statusColor(m.status)} px-3 py-1 rounded-pill">${m.status}</span>
+                                </td>
+                                <td class="text-end small text-muted">${m.createdAt ? new Date(m.createdAt).toLocaleString() : 'N/A'}</td>
+                            `;
+                            tbody.appendChild(row);
+                        });
+                    } else {
+                        tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4 small">No active rescue missions.</td></tr>';
+                    }
+                }
+            } catch (err) {
+                console.error("Failed to load active missions:", err);
+                const tbody = document.getElementById('monitoring-live-body');
+                if (tbody) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-danger py-4 small">Unable to load live data. <button class="btn btn-sm btn-outline-danger ms-2" onclick="loadLiveStats()">Retry</button></td></tr>';
+                }
+            }
+        }
+
+        async function loadDonationWatch() {
+            if (!window.api) return;
+            try {
+                const data = await window.api.get('/admin/donations?size=100');
+                const tbody = document.getElementById('monitoring-donations-body');
+                if (tbody) {
+                    if (data && data.length > 0) {
+                        tbody.innerHTML = '';
+                        data.forEach(d => {
+                            const expiryDate = d.expiryTime ? new Date(d.expiryTime).toLocaleString() : 'N/A';
+                            const statusColorMap = { AVAILABLE: 'success', REQUESTED: 'warning', ACCEPTED: 'primary', COLLECTED: 'info', EXPIRED: 'danger' };
+                            const badgeColor = statusColorMap[d.status] || 'secondary';
+
+                            const row = document.createElement('tr');
+                            row.innerHTML = `
+                                <td class="fw-bold">#DON-${d.id}</td>
+                                <td>
+                                    <div class="small fw-bold text-dark">${d.title}</div>
+                                    <div class="extra-small text-muted">${d.foodCategory}</div>
+                                </td>
+                                <td class="small text-muted">${d.donorEmail || 'N/A'}</td>
+                                <td class="small fw-bold">${d.quantityKg} kg</td>
+                                <td class="small text-muted" style="max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${d.locationAddress || 'N/A'}</td>
+                                <td>
+                                    <span class="badge bg-${badgeColor} bg-opacity-10 text-${badgeColor} px-3 py-1 rounded-pill">${d.status}</span>
+                                </td>
+                                <td class="text-end small text-muted">${expiryDate}</td>
+                            `;
+                            tbody.appendChild(row);
+                        });
+                    } else {
+                        tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4 small">No surplus food donations recorded yet.</td></tr>';
+                    }
+                }
+            } catch (err) {
+                console.error("Failed to load donation watch:", err);
+                const tbody = document.getElementById('monitoring-donations-body');
+                if (tbody) {
+                    tbody.innerHTML = '<tr><td colspan="7" class="text-center text-danger py-4 small">Unable to load live data. <button class="btn btn-sm btn-outline-danger ms-2" onclick="loadDonationWatch()">Retry</button></td></tr>';
+                }
+            }
+        }
+
+        function clearLiveTable() {
+            const activeTab = document.querySelector('.nav-link.active').getAttribute('data-bs-target');
+            if (activeTab === '#tab-missions') {
+                const tbody = document.getElementById('monitoring-live-body');
+                if (tbody) tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4 small">Waiting for live events…</td></tr>';
+            } else {
+                const tbody = document.getElementById('monitoring-donations-body');
+                if (tbody) tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4 small">Waiting for live events…</td></tr>';
+            }
+        }
+    </script>
+    <style>
+        .ls-1 { letter-spacing: 0.1em; }
+        .uppercase { text-transform: uppercase; }
+        .extra-small { font-size: 0.65rem; }
+        .btn-white { background: white; color: var(--primary); border: none; }
+    </style>
+</body>
+</html>

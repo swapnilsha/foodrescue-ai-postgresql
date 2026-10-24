@@ -1,0 +1,36 @@
+# Exclude version control details
+.git
+.github
+.gitattributes
+.gitignore
+
+# Exclude IDE configurations
+.idea
+.vscode
+.project
+.classpath
+.factorypath
+.settings
+*.iml
+*.iws
+*.ipr
+
+# Exclude build output
+target/
+build/
+bin/
+
+# Exclude local environment files & logs
+.env
+*.log
+hs_err_pid*
+
+# Exclude user uploads & documentations
+uploads/
+README.md
+HELP.md
+LICENSE
+docker-compose.yml
+Dockerfile
+application-example.properties
+.env.example

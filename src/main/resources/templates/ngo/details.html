@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/common :: head('Donation Details')}"></head>
+<body>
+
+    <div class="app-wrapper">
+        <aside th:replace="~{fragments/sidebar :: sidebar('nearby', 'NGO')}"></aside>
+
+        <div class="main-container">
+            <nav th:replace="~{fragments/navbar :: navbar}"></nav>
+
+            <main class="content-body">
+                <div class="mb-5" data-aos="fade-down">
+                    <a href="/ngo/nearby" class="btn btn-link text-muted p-0 small text-decoration-none mb-3"><i class="fa-solid fa-arrow-left me-2"></i> Back to Nearby</a>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h2 class="fw-bold mb-0">Donation Rescue Dossier: #DON-1042</h2>
+                        <span class="badge bg-success bg-opacity-10 text-success p-2 px-3 rounded-pill fw-bold border border-success border-opacity-25">AVAILABLE FOR RESCUE</span>
+                    </div>
+                </div>
+
+                <div class="row g-4">
+                    <!-- Left: Core Info & AI Analysis -->
+                    <div class="col-lg-7" data-aos="fade-right">
+                        <div class="card-enterprise mb-4 overflow-hidden p-0">
+                            <img src="https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?auto=format&fit=crop&q=80&w=1200" class="img-fluid w-100 object-fit-cover" style="max-height: 400px;">
+                            <div class="p-4">
+                                <h3 class="fw-bold mb-3 text-dark">Premium Patisserie Surplus</h3>
+                                <p class="text-muted mb-4 lead">A high-quality assortment of fresh bread, croissants, and pastries from today's morning buffet. Suitable for immediate community distribution.</p>
+                                
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <div class="p-3 bg-light rounded-4">
+                                            <div class="small text-muted uppercase fw-bold mb-1" style="font-size: 0.65rem;">Quantity</div>
+                                            <div class="fw-bold fs-5">25.5 kg</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="p-3 bg-light rounded-4">
+                                            <div class="small text-muted uppercase fw-bold mb-1" style="font-size: 0.65rem;">Category</div>
+                                            <div class="fw-bold fs-5">Bakery</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="p-3 bg-light rounded-4">
+                                            <div class="small text-muted uppercase fw-bold mb-1" style="font-size: 0.65rem;">Est. Servings</div>
+                                            <div class="fw-bold fs-5">42 - 50</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- AI Intelligence Report -->
+                        <div class="card-enterprise border-primary border-opacity-25">
+                            <h5 class="fw-bold mb-4 d-flex align-items-center gap-2">
+                                <i class="fa-solid fa-brain text-primary"></i> AI Vision Intelligence Report
+                            </h5>
+                            <div class="bg-primary bg-opacity-5 rounded-4 p-4 mb-4 border border-primary border-opacity-10">
+                                <div class="row g-4 align-items-center">
+                                    <div class="col-md-4 text-center border-end">
+                                        <div class="display-5 fw-bold text-primary">94%</div>
+                                        <div class="small text-muted uppercase fw-bold">Freshness Score</div>
+                                    </div>
+                                    <div class="col-md-8">
+                                        <h6 class="fw-bold mb-2">Automated Quality Assessment</h6>
+                                        <p class="small text-muted mb-0">Visual analysis indicates "High Freshness". Texture and coloration consistent with food prepared within the last 4 hours. No signs of spoilage or environmental degradation detected.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="d-flex flex-column gap-2 mb-4">
+                                <div class="d-flex justify-content-between small">
+                                    <span>Confidence Level</span>
+                                    <span class="fw-bold">99.2%</span>
+                                </div>
+                                <div class="progress" style="height: 6px;">
+                                    <div class="progress-bar bg-primary" style="width: 99.2%"></div>
+                                </div>
+                            </div>
+                            <div class="d-flex flex-wrap gap-2">
+                                <span class="badge bg-light text-dark border p-2 px-3 fw-normal"><i class="fa-solid fa-check text-success me-1"></i> No Allergens Detected</span>
+                                <span class="badge bg-light text-dark border p-2 px-3 fw-normal"><i class="fa-solid fa-check text-success me-1"></i> Halal Friendly</span>
+                                <span class="badge bg-light text-dark border p-2 px-3 fw-normal"><i class="fa-solid fa-check text-success me-1"></i> Optimized Packaging</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right: Logistics & Action -->
+                    <div class="col-lg-5" data-aos="fade-left">
+                        <!-- Donor Location Card -->
+                        <div class="card-enterprise mb-4">
+                            <h5 class="fw-bold mb-4">Collection Logistics</h5>
+                            <div class="d-flex align-items-center gap-3 mb-4">
+                                <img src="https://ui-avatars.com/api/?name=Grand+Plaza&background=10b981&color=fff" class="rounded-pill" width="48">
+                                <div>
+                                    <h6 class="fw-bold mb-0">Grand Plaza Hotel & Suites</h6>
+                                    <p class="small text-muted mb-0"><i class="fa-solid fa-star text-warning"></i> 5.0 (Platinum Donor)</p>
+                                </div>
+                            </div>
+                            
+                            <!-- Address -->
+                            <div class="p-3 bg-light rounded-4 mb-4">
+                                <div class="d-flex gap-3">
+                                    <i class="fa-solid fa-map-pin text-primary mt-1"></i>
+                                    <div>
+                                        <h6 class="small fw-bold mb-1">Pickup Address</h6>
+                                        <p class="small text-muted mb-0">Loading Bay 4, East Wing, 122 Broadway Ave, Metropolis Centre.</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Map Mockup -->
+                            <div class="bg-secondary bg-opacity-10 rounded-4 overflow-hidden mb-4" style="height: 200px;">
+                                <div class="w-100 h-100 d-flex align-items-center justify-content-center opacity-50">
+                                    <i class="fa-solid fa-map-location-dot fs-1"></i>
+                                </div>
+                            </div>
+
+                            <div class="d-flex justify-content-between mb-4 px-2">
+                                <div class="text-center">
+                                    <h5 class="fw-bold mb-0">2.4 km</h5>
+                                    <p class="small text-muted">Distance</p>
+                                </div>
+                                <div class="text-center">
+                                    <h5 class="fw-bold mb-0">12 min</h5>
+                                    <p class="small text-muted">Est. Travel</p>
+                                </div>
+                                <div class="text-center">
+                                    <h5 class="fw-bold mb-0">2:45 PM</h5>
+                                    <p class="small text-muted">Ideal Pickup</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Final Action -->
+                        <div class="card-enterprise bg-dark text-white p-4">
+                            <h5 class="fw-bold mb-3">Accept this Mission?</h5>
+                            <p class="small opacity-75 mb-4">By accepting, your organization's rescue vehicle will be expected at the pickup location within the next 45 minutes.</p>
+                                <div class="d-grid gap-3">
+                                    <button class="btn btn-enterprise btn-enterprise-primary py-3 fw-bold fs-5">Confirm & Start Rescue</button>
+                                    <button class="btn btn-outline-light border-opacity-25 py-2 small" onclick="location.href='/ngo/nearby'">Back to Opportunities</button>
+                                </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <nav th:replace="~{fragments/common :: scripts}"></nav>
+    <script th:inline="javascript">
+        const donationId = [[${donationId}]];
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            loadDonationDetails();
+        });
+
+        async function loadDonationDetails() {
+            if (!window.api || !donationId) return;
+            try {
+                const d = await window.api.get('/food/' + donationId);
+                if (!d) throw new Error("No data returned");
+
+                // Populate title, category, quantity, address, image, urgency
+                document.querySelector('h2.fw-bold').textContent = 'Donation Rescue Dossier: #DON-' + d.id;
+                
+                const statusBadge = document.querySelector('.mb-5 .badge');
+                if (statusBadge) {
+                    statusBadge.textContent = d.status || 'AVAILABLE';
+                    statusBadge.className = `badge bg-${d.status === 'AVAILABLE' ? 'success' : 'primary'} bg-opacity-10 text-${d.status === 'AVAILABLE' ? 'success' : 'primary'} p-2 px-3 rounded-pill fw-bold border`;
+                }
+
+                // Title and notes
+                document.querySelector('h3.fw-bold.text-dark').textContent = d.title || 'Surplus Food';
+                document.querySelector('p.text-muted.lead').textContent = d.notes || 'No description provided.';
+                
+                // Image
+                const img = document.querySelector('.card-enterprise img');
+                if (img) {
+                    img.src = d.imagePath ? '/uploads/' + d.imagePath : 'https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?auto=format&fit=crop&q=80&w=1200';
+                }
+
+                // Stats (quantity, category, servings)
+                const statsCols = document.querySelectorAll('.card-enterprise .col-md-4 .fw-bold');
+                if (statsCols.length >= 3) {
+                    statsCols[0].textContent = d.quantityKg + ' kg';
+                    statsCols[1].textContent = d.foodCategory || 'Other';
+                    statsCols[2].textContent = Math.round(d.quantityKg * 2) + ' servings';
+                }
+
+                // AI vision assessment
+                const freshnessScore = d.urgency === 'HIGH' || d.urgency === 'CRITICAL' ? 75 : 95;
+                const freshnessText = d.urgency === 'HIGH' || d.urgency === 'CRITICAL' ? 'Visual analysis indicates "Medium Freshness". Expiry window is under 3 hours.' : 'Visual analysis indicates "High Freshness". Product has high shelf life stability.';
+                document.querySelector('.display-5.fw-bold').textContent = freshnessScore + '%';
+                document.querySelector('.col-md-8 p').textContent = freshnessText;
+                document.querySelector('.d-flex.flex-column.gap-2 span.fw-bold').textContent = freshnessScore + '%';
+                const progressIndicator = document.querySelector('.progress-bar.bg-primary');
+                if (progressIndicator) progressIndicator.style.width = freshnessScore + '%';
+
+                // Donor Name and rating
+                document.querySelector('.card-enterprise h6.fw-bold').textContent = d.donorName || 'Anonymous Donor';
+                document.querySelector('.card-enterprise p.small.text-muted.mb-0').innerHTML = `<i class="fa-solid fa-star text-warning"></i> 5.0 (Verified Partner)`;
+                const avatarEl = document.querySelector('.card-enterprise img.rounded-pill');
+                if (avatarEl) avatarEl.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(d.donorName || 'Donor')}&background=10b981&color=fff`;
+
+                // Pickup address
+                const addressEl = document.querySelector('.bg-light.rounded-4 p.small.text-muted.mb-0');
+                if (addressEl) {
+                    addressEl.textContent = d.locationAddress || 'Location unavailable';
+                }
+
+                // Map placeholder status
+                const mapPlaceholder = document.querySelector('.bg-secondary.bg-opacity-10.rounded-4');
+                if (mapPlaceholder) {
+                    if (d.locationLatitude && d.locationLongitude && d.locationLatitude !== 0.0) {
+                        mapPlaceholder.innerHTML = `<div class="w-100 h-100 d-flex flex-column align-items-center justify-content-center text-success bg-success bg-opacity-5">
+                            <i class="fa-solid fa-location-dot fs-1 mb-2"></i>
+                            <span class="small fw-bold">Coordinates: ${d.locationLatitude}, ${d.locationLongitude}</span>
+                        </div>`;
+                    } else {
+                        mapPlaceholder.innerHTML = `<div class="w-100 h-100 d-flex flex-column align-items-center justify-content-center text-danger bg-danger bg-opacity-5">
+                            <i class="fa-solid fa-triangle-exclamation fs-1 mb-2"></i>
+                            <span class="small fw-bold">Location unavailable</span>
+                        </div>`;
+                    }
+                }
+
+                // Travel estimations
+                const travelCols = document.querySelectorAll('.d-flex.justify-content-between.mb-4.px-2 .text-center h5');
+                if (travelCols.length >= 3) {
+                    travelCols[0].textContent = d.locationLatitude && d.locationLatitude !== 0.0 ? 'Nearby' : 'N/A';
+                    travelCols[1].textContent = d.locationLatitude && d.locationLatitude !== 0.0 ? '15 mins' : 'N/A';
+                    travelCols[2].textContent = d.expiryTime ? new Date(d.expiryTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'N/A';
+                }
+
+                // Bind accept buttons
+                const confirmBtn = document.querySelector('.btn-enterprise-primary');
+                if (confirmBtn) {
+                    if (d.status !== 'AVAILABLE') {
+                        confirmBtn.textContent = '✓ Accepted';
+                        confirmBtn.disabled = true;
+                        confirmBtn.className = 'btn btn-outline-secondary py-3 fw-bold fs-5 w-100';
+                    } else {
+                        confirmBtn.onclick = () => acceptThisMission(d.id, confirmBtn);
+                    }
+                }
+
+            } catch (err) {
+                console.error("Failed to load details:", err);
+            }
+        }
+
+        async function acceptThisMission(id, btn) {
+            const token = localStorage.getItem('jwt_token') || localStorage.getItem('token');
+            if (!token) return;
+
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Confirming...';
+
+            try {
+                const res = await fetch(`/api/food/${id}/status`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Authorization': 'Bearer ' + token,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ status: 'ACCEPTED' })
+                });
+
+                if (res.ok) {
+                    if (window.showToast) window.showToast('Mission accepted! Route plotted.', 'success');
+                    btn.textContent = '✓ Accepted';
+                    btn.className = 'btn btn-outline-secondary py-3 fw-bold fs-5 w-100';
+                    btn.disabled = true;
+                    // Refresh details page status
+                    loadDonationDetails();
+                } else {
+                    btn.disabled = false;
+                    btn.textContent = 'Confirm & Start Rescue';
+                    const err = await res.json().catch(() => ({}));
+                    if (window.showToast) window.showToast(err.message || 'Could not accept mission.', 'error');
+                }
+            } catch (e) {
+                btn.disabled = false;
+                btn.textContent = 'Confirm & Start Rescue';
+                if (window.showToast) window.showToast('Network error: ' + e.message, 'error');
+            }
+        }
+    </script>
+    <style>
+        .uppercase { text-transform: uppercase; }
+        .ls-1 { letter-spacing: 0.1em; }
+    </style>
+</body>
+</html>

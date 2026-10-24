@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/common :: head('Rescue Chat')}"></head>
+<body class="overflow-hidden">
+
+    <div class="app-wrapper">
+        <aside th:replace="~{fragments/sidebar :: sidebar('chat', 'SHARED')}"></aside>
+
+        <div class="main-container">
+            <nav th:replace="~{fragments/navbar :: navbar}"></nav>
+
+            <main class="d-flex p-0" style="height: calc(100vh - var(--navbar-height)); overflow: hidden;">
+
+                <!-- ── LEFT: Conversation List ───────────────────────────────── -->
+                <div class="bg-white border-end d-flex flex-column" style="min-width:300px;width:320px;">
+                    <div class="p-3 border-bottom">
+                        <h6 class="fw-bold mb-2">Rescue Communications</h6>
+                        <div class="input-group bg-light rounded-pill px-2 border">
+                            <span class="input-group-text bg-transparent border-0">
+                                <i class="fa-solid fa-magnifying-glass small text-muted"></i>
+                            </span>
+                            <input type="text" id="partnerSearch" class="form-control bg-transparent border-0 small"
+                                   placeholder="Search partners..." oninput="filterPartners(this.value)">
+                        </div>
+                    </div>
+
+                    <div class="flex-grow-1 overflow-y-auto" id="partnerList">
+                        <!-- Partners rendered by JS -->
+                    </div>
+                </div>
+
+                <!-- ── RIGHT: Chat Area ──────────────────────────────────────── -->
+                <div class="flex-grow-1 bg-light d-flex flex-column position-relative">
+
+                    <!-- Chat Header -->
+                    <div class="p-3 bg-white border-bottom d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center gap-3">
+                            <div id="chatAvatar" class="rounded-circle d-flex align-items-center justify-content-center fw-bold text-white"
+                                 style="width:40px;height:40px;background:var(--primary);font-size:1rem;">?</div>
+                            <div>
+                                <h6 id="chatPartnerName" class="fw-bold mb-0 small">Select a conversation</h6>
+                                <span id="chatStatusBadge" class="extra-small text-muted">—</span>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-2 align-items-center">
+                            <span id="wsStatusBadge" class="badge bg-secondary small">● Connecting...</span>
+                        </div>
+                    </div>
+
+                    <!-- Messages Feed -->
+                    <div class="flex-grow-1 overflow-y-auto p-4 d-flex flex-column gap-3" id="chatFeed">
+                        <!-- Placeholder -->
+                        <div id="chatPlaceholder" class="m-auto text-center text-muted">
+                            <i class="fa-solid fa-comments fs-1 opacity-25 mb-3 d-block"></i>
+                            <p class="mb-0 fw-semibold">Select a partner to start chatting</p>
+                            <p class="extra-small">Messages are end-to-end delivered via WebSocket</p>
+                        </div>
+                    </div>
+
+                    <!-- Input Area -->
+                    <div class="p-3 bg-white border-top">
+                        <div class="d-flex gap-2 align-items-center border p-2 rounded-4 bg-light shadow-sm">
+                            <button class="btn btn-link text-muted p-1" id="attachBtn" title="Attach file">
+                                <i class="fa-solid fa-paperclip"></i>
+                            </button>
+                            <input type="text" id="chatInput"
+                                   class="form-control border-0 bg-transparent flex-grow-1 py-2 fs-6 shadow-none"
+                                   placeholder="Type your message here..."
+                                   aria-label="Chat message input"
+                                   disabled>
+                            <button id="sendBtn" class="btn btn-primary rounded-circle p-0 d-flex align-items-center justify-content-center"
+                                    style="width:40px;height:40px;" title="Send message" disabled>
+                                <i class="fa-solid fa-paper-plane small"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <nav th:replace="~{fragments/common :: scripts}"></nav>
+
+    <style>
+        .partner-item { cursor: pointer; transition: background 0.15s; border-left: 3px solid transparent; }
+        .partner-item:hover { background: var(--bg-main); }
+        .partner-item.active { background: var(--bg-main); border-left-color: var(--primary); }
+        .chat-bubble { max-width: 72%; }
+        .chat-bubble.left  .bubble-body { background: white; border: 1px solid var(--border-color); border-radius: 18px 18px 18px 4px; }
+        .chat-bubble.right .bubble-body { background: var(--primary); color: white; border-radius: 18px 18px 4px 18px; }
+        .chat-bubble.right { align-self: flex-end; }
+        .bubble-body { padding: .65rem 1rem; }
+        .bubble-time { font-size: .64rem; margin-top: .3rem; opacity: .60; }
+        .chat-bubble.right .bubble-time { text-align:right; }
+        .join-notice { font-size:.72rem; color:var(--text-muted); text-align:center; }
+        .extra-small { font-size: .65rem; }
+        #chatFeed { scroll-behavior: smooth; }
+        #wsStatusBadge.connected { background: var(--success) !important; }
+    </style>
+
+    <script>
+    // ── State ───────────────────────────────────────────────────────────────
+    const ROOM_ID    = 'general';          // single shared room for demo
+    let stompClient  = null;
+    let connected    = false;
+    let currentUser  = null;
+    let currentRoom  = null;
+    let partnersList = [];
+
+    // ── Init ────────────────────────────────────────────────────────────────
+    // ── Init ────────────────────────────────────────────────────────────────
+    document.addEventListener('DOMContentLoaded', () => {
+        currentUser = window.stateManager?.getUser();
+        if (window.stateManager) {
+            window.stateManager.on('userChanged', (user) => {
+                currentUser = user;
+                loadChatPartners();
+            });
+        }
+        if (!currentUser) {
+            currentUser = { name: 'Me', email: sessionStorage.getItem('user_email') || 'me@local' };
+            loadChatPartners();
+        }
+        connectWebSocket();
+        wireInput();
+    });
+
+    async function loadChatPartners() {
+        if (!window.api) return;
+        try {
+            const data = await window.api.get('/chat/partners');
+            if (data && data.length > 0) {
+                partnersList = data;
+                renderPartnerList(partnersList);
+            } else {
+                document.getElementById('partnerList').innerHTML = '<div class="text-center py-4 text-muted small">No messaging partners found.</div>';
+            }
+        } catch (err) {
+            console.error("Failed to load chat partners:", err);
+        }
+    }
+
+    // ── Partner List ────────────────────────────────────────────────────────
+    function renderPartnerList(partners) {
+        const list = document.getElementById('partnerList');
+        list.innerHTML = partners.map(p => `
+            <div class="partner-item p-3 border-bottom d-flex gap-3" data-id="${p.id}" data-name="${p.name}" data-email="${p.email}" onclick="selectPartner(this)">
+                <div class="position-relative flex-shrink-0">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center fw-bold text-white"
+                         style="width:44px;height:44px;background:${hashColor(p.name)};font-size:.85rem;">${initials(p.name)}</div>
+                    ${p.online ? '<div class="position-absolute bottom-0 end-0 bg-success border border-2 border-white rounded-circle" style="width:10px;height:10px;"></div>' : ''}
+                </div>
+                <div class="flex-grow-1 overflow-hidden">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="fw-semibold small text-truncate">${p.name}</span>
+                        <span class="extra-small text-muted">${p.time || ''}</span>
+                    </div>
+                    <p class="extra-small text-muted mb-0 text-truncate">${p.lastMsg || 'Click to start chatting...'}</p>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function filterPartners(query) {
+        const q = query.toLowerCase();
+        const filtered = partnersList.filter(p => p.name.toLowerCase().includes(q));
+        renderPartnerList(filtered);
+    }
+
+    async function selectPartner(el) {
+        document.querySelectorAll('.partner-item').forEach(e => e.classList.remove('active'));
+        el.classList.add('active');
+
+        const name  = el.dataset.name;
+        const id    = el.dataset.id;
+        
+        // Calculate symmetric room ID
+        const myId = currentUser?.id;
+        const peerId = parseInt(id);
+        if (myId && peerId) {
+            const minId = Math.min(myId, peerId);
+            const maxId = Math.max(myId, peerId);
+            currentRoom = `room-${minId}-${maxId}`;
+        } else {
+            currentRoom = `room-${id}`;
+        }
+
+        // Update header
+        document.getElementById('chatPartnerName').textContent = name;
+        document.getElementById('chatStatusBadge').innerHTML   = `<i class="fa-solid fa-circle text-success me-1" style="font-size:.5rem;"></i> Online`;
+        document.getElementById('chatAvatar').textContent      = initials(name);
+        document.getElementById('chatAvatar').style.background = hashColor(name);
+
+        // Enable input
+        document.getElementById('chatInput').disabled = !connected;
+        document.getElementById('sendBtn').disabled   = !connected;
+
+        // Clear feed
+        clearFeed();
+        appendJoinNotice(`Opening secure channel with ${name}...`);
+
+        // Load chat history from REST
+        try {
+            const history = await window.api.get(`/chat/messages/${currentRoom}`);
+            if (history && history.length > 0) {
+                clearFeed();
+                history.forEach(m => {
+                    const isMine = m.senderEmail === currentUser?.email || m.sender === currentUser?.name;
+                    appendMessage(m.sender || 'User', m.content, m.timestamp, isMine);
+                });
+            } else {
+                appendJoinNotice(`This is the beginning of your conversation with ${name}.`);
+            }
+        } catch (err) {
+            console.error("Failed to load room history:", err);
+        }
+
+        // Subscribe to WebSocket room
+        subscribeRoom(currentRoom);
+    }
+
+    // ── WebSocket ───────────────────────────────────────────────────────────
+    function connectWebSocket() {
+        if (!window.SockJS || !window.Stomp) {
+            console.error('[Chat] SockJS or StompJS not loaded');
+            setWsStatus(false);
+            return;
+        }
+
+        const token = window.api?.getToken() || sessionStorage.getItem('jwt_token');
+        const socket = new SockJS('/ws-notifications');
+        stompClient  = Stomp.over(socket);
+        stompClient.debug = null; // suppress noisy logs
+
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
+        stompClient.connect(headers, () => {
+            connected = true;
+            setWsStatus(true);
+            console.log('[Chat] WebSocket connected');
+
+            // Re-enable input if a partner was already selected
+            if (currentRoom) {
+                document.getElementById('chatInput').disabled = false;
+                document.getElementById('sendBtn').disabled   = false;
+            }
+
+            subscribeRoom(ROOM_ID); // general room always
+        }, (err) => {
+            connected = false;
+            setWsStatus(false);
+            console.warn('[Chat] WS error, retrying…', err);
+            setTimeout(connectWebSocket, 4000);
+        });
+    }
+
+    let currentSubscription = null;
+
+    function subscribeRoom(roomId) {
+        if (!stompClient || !connected) return;
+        if (currentSubscription) currentSubscription.unsubscribe();
+
+        currentSubscription = stompClient.subscribe(`/topic/chat.${roomId}`, (frame) => {
+            try {
+                const msg = JSON.parse(frame.body);
+                if (msg.type === 'JOIN') {
+                    appendJoinNotice(msg.content);
+                } else {
+                    const isMine = msg.senderEmail === currentUser?.email ||
+                                   msg.sender === currentUser?.name ||
+                                   msg.sender === currentUser?.email;
+                    appendMessage(msg.sender || 'User', msg.content, msg.timestamp, isMine);
+                }
+            } catch(e) {
+                console.error('[Chat] Failed to parse message', e);
+            }
+        });
+    }
+
+    function sendMessage() {
+        const input   = document.getElementById('chatInput');
+        const content = input.value.trim();
+        if (!content || !stompClient || !connected) return;
+
+        const msg = {
+            type:    'CHAT',
+            sender:  currentUser?.email || currentUser?.name || 'Me',
+            content: content,
+            roomId:  currentRoom || ROOM_ID
+        };
+
+        stompClient.send('/app/chat.send', {}, JSON.stringify(msg));
+
+        input.value = '';
+        input.focus();
+    }
+
+    // ── DOM Helpers ─────────────────────────────────────────────────────────
+    function wireInput() {
+        document.getElementById('sendBtn').addEventListener('click', sendMessage);
+        document.getElementById('chatInput').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+        });
+    }
+
+    function appendMessage(sender, content, timestamp, isMine) {
+        const feed = document.getElementById('chatFeed');
+        hidePlaceholder();
+
+        const bubble = document.createElement('div');
+        bubble.className = `chat-bubble d-flex flex-column ${isMine ? 'right' : 'left'}`;
+        bubble.innerHTML = `
+            ${!isMine ? `<span class="extra-small fw-semibold mb-1 ms-1 text-muted">${escHtml(sender)}</span>` : ''}
+            <div class="bubble-body small">${escHtml(content)}</div>
+            <div class="bubble-time">${timestamp || ''}</div>
+        `;
+        feed.appendChild(bubble);
+        feed.scrollTop = feed.scrollHeight;
+    }
+
+    function appendJoinNotice(text) {
+        const feed = document.getElementById('chatFeed');
+        hidePlaceholder();
+        const el = document.createElement('div');
+        el.className = 'join-notice py-1';
+        el.textContent = text;
+        feed.appendChild(el);
+        feed.scrollTop = feed.scrollHeight;
+    }
+
+    function clearFeed() {
+        const feed = document.getElementById('chatFeed');
+        feed.innerHTML = '<div id="chatPlaceholder" style="display:none;"></div>';
+    }
+
+    function hidePlaceholder() {
+        const p = document.getElementById('chatPlaceholder');
+        if (p) p.style.display = 'none';
+    }
+
+    function setWsStatus(ok) {
+        const badge = document.getElementById('wsStatusBadge');
+        if (ok) {
+            badge.textContent = '● Live';
+            badge.classList.add('connected');
+            badge.classList.remove('bg-secondary');
+            badge.classList.add('bg-success');
+        } else {
+            badge.textContent = '● Offline';
+            badge.classList.remove('connected');
+            badge.classList.remove('bg-success');
+            badge.classList.add('bg-secondary');
+        }
+    }
+
+    // ── Utilities ───────────────────────────────────────────────────────────
+    function initials(name) {
+        return name.split(' ').slice(0,2).map(w => w[0]).join('').toUpperCase();
+    }
+
+    function hashColor(str) {
+        const palette = ['#10b981','#3b82f6','#f59e0b','#ef4444','#8b5cf6','#06b6d4','#ec4899'];
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
+        return palette[Math.abs(hash) % palette.length];
+    }
+
+    function escHtml(str) {
+        return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+    </script>
+</body>
+</html>

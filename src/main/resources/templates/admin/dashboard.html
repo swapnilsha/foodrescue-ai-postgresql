@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/common :: head('Platform Admin Dashboard | FoodRescue AI')}"></head>
+<body>
+
+    <div class="app-wrapper">
+        <aside th:replace="~{fragments/sidebar :: sidebar('dashboard', 'ADMIN')}"></aside>
+        <div class="main-container">
+            <nav th:replace="~{fragments/navbar :: navbar}"></nav>
+
+            <main class="content-body">
+                <div class="d-flex justify-content-between align-items-center mb-5" data-aos="fade-down">
+                    <div>
+                        <h2 class="fw-bold mb-1">Global System Overview 🏛️</h2>
+                        <p class="text-muted mb-0">Real-time statistics from MySQL database.</p>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <a href="/admin/users" class="btn btn-dark px-4"><i class="fa-solid fa-users me-2"></i> Manage Users</a>
+                    </div>
+                </div>
+
+                <!-- Primary Stats — loaded from /api/admin/stats -->
+                <div class="row g-4 mb-5">
+                    <div class="col-xl-3 col-md-6" data-aos="fade-up" data-aos-delay="100">
+                        <div class="card-enterprise border-0 shadow-sm p-4">
+                            <div class="text-muted small uppercase fw-bold mb-3">Total Users</div>
+                            <div class="d-flex align-items-center justify-content-between">
+                                <h2 class="fw-800 mb-0 skeleton" id="stat-totalUsers">—</h2>
+                                <div class="bg-primary bg-opacity-10 text-primary p-3 rounded-circle"><i class="fa-solid fa-users fs-4"></i></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-3 col-md-6" data-aos="fade-up" data-aos-delay="200">
+                        <div class="card-enterprise border-0 shadow-sm p-4">
+                            <div class="text-muted small uppercase fw-bold mb-3">Total NGOs</div>
+                            <div class="d-flex align-items-center justify-content-between">
+                                <h2 class="fw-800 mb-0 skeleton" id="stat-totalNgos">—</h2>
+                                <div class="bg-success bg-opacity-10 text-success p-3 rounded-circle"><i class="fa-solid fa-building-ngo fs-4"></i></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-3 col-md-6" data-aos="fade-up" data-aos-delay="300">
+                        <div class="card-enterprise border-0 shadow-sm p-4">
+                            <div class="text-muted small uppercase fw-bold mb-3">Total Donations</div>
+                            <div class="d-flex align-items-center justify-content-between">
+                                <h2 class="fw-800 mb-0 skeleton" id="stat-totalDonations">—</h2>
+                                <div class="bg-warning bg-opacity-10 text-warning p-3 rounded-circle"><i class="fa-solid fa-truck-ramp-box fs-4"></i></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-3 col-md-6" data-aos="fade-up" data-aos-delay="400">
+                        <div class="card-enterprise border-0 shadow-sm p-4">
+                            <div class="text-muted small uppercase fw-bold mb-3">Pending Verifications</div>
+                            <div class="d-flex align-items-center justify-content-between">
+                                <h2 class="fw-800 mb-0 skeleton" id="stat-pendingVerifications">—</h2>
+                                <div class="bg-danger bg-opacity-10 text-danger p-3 rounded-circle"><i class="fa-solid fa-user-clock fs-4"></i></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Donation Status Breakdown -->
+                <div class="row g-4 mb-5">
+                    <div class="col-md-3">
+                        <div class="card-enterprise border-0 shadow-sm p-4 text-center">
+                            <div class="text-muted small uppercase fw-bold mb-2">Available</div>
+                            <h3 class="fw-800 text-success skeleton" id="stat-availableDonations">—</h3>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card-enterprise border-0 shadow-sm p-4 text-center">
+                            <div class="text-muted small uppercase fw-bold mb-2">Accepted</div>
+                            <h3 class="fw-800 text-primary skeleton" id="stat-acceptedDonations">—</h3>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card-enterprise border-0 shadow-sm p-4 text-center">
+                            <div class="text-muted small uppercase fw-bold mb-2">Collected</div>
+                            <h3 class="fw-800 text-info skeleton" id="stat-collectedDonations">—</h3>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card-enterprise border-0 shadow-sm p-4 text-center">
+                            <div class="text-muted small uppercase fw-bold mb-2">Expired</div>
+                            <h3 class="fw-800 text-danger skeleton" id="stat-expiredDonations">—</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Donation Request Workflow Breakdown (BUG FIX: dynamic counters) -->
+                <div class="mb-2" data-aos="fade-up" data-aos-delay="450">
+                    <h5 class="fw-bold mb-3">Rescue Request Workflow Status</h5>
+                </div>
+                <div class="row row-cols-2 row-cols-md-5 g-4 mb-5" data-aos="fade-up" data-aos-delay="450">
+                    <div class="col">
+                        <div class="card-enterprise border-0 shadow-sm p-3 text-center h-100">
+                            <div class="text-muted small uppercase fw-bold mb-2" style="font-size: 0.65rem;">Total Requests</div>
+                            <h3 class="fw-800 text-dark mb-0 skeleton" id="stat-totalRequests">—</h3>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="card-enterprise border-0 shadow-sm p-3 text-center h-100">
+                            <div class="text-muted small uppercase fw-bold mb-2" style="font-size: 0.65rem;">Pending</div>
+                            <h3 class="fw-800 text-warning mb-0 skeleton" id="stat-pendingRequests">—</h3>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="card-enterprise border-0 shadow-sm p-3 text-center h-100">
+                            <div class="text-muted small uppercase fw-bold mb-2" style="font-size: 0.65rem;">Accepted</div>
+                            <h3 class="fw-800 text-primary mb-0 skeleton" id="stat-acceptedRequests">—</h3>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="card-enterprise border-0 shadow-sm p-3 text-center h-100">
+                            <div class="text-muted small uppercase fw-bold mb-2" style="font-size: 0.65rem;">Assigned</div>
+                            <h3 class="fw-800 text-info mb-0 skeleton" id="stat-assignedRequests">—</h3>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="card-enterprise border-0 shadow-sm p-3 text-center h-100">
+                            <div class="text-muted small uppercase fw-bold mb-2" style="font-size: 0.65rem;">In Progress</div>
+                            <h3 class="fw-800 text-secondary mb-0 skeleton" id="stat-pickupInProgressRequests">—</h3>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="card-enterprise border-0 shadow-sm p-3 text-center h-100">
+                            <div class="text-muted small uppercase fw-bold mb-2" style="font-size: 0.65rem;">Collected</div>
+                            <h3 class="fw-800 text-info mb-0 skeleton" id="stat-collectedRequests">—</h3>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="card-enterprise border-0 shadow-sm p-3 text-center h-100">
+                            <div class="text-muted small uppercase fw-bold mb-2" style="font-size: 0.65rem;">Received</div>
+                            <h3 class="fw-800 text-success mb-0 skeleton" id="stat-receivedRequests">—</h3>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="card-enterprise border-0 shadow-sm p-3 text-center h-100">
+                            <div class="text-muted small uppercase fw-bold mb-2" style="font-size: 0.65rem;">Delivered</div>
+                            <h3 class="fw-800 text-success mb-0 skeleton" id="stat-deliveredRequests">—</h3>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="card-enterprise border-0 shadow-sm p-3 text-center h-100">
+                            <div class="text-muted small uppercase fw-bold mb-2" style="font-size: 0.65rem;">Rejected</div>
+                            <h3 class="fw-800 text-danger mb-0 skeleton" id="stat-rejectedRequests">—</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-4">
+                    <div class="col-lg-8" data-aos="fade-up">
+                        <div class="card-enterprise h-100">
+                            <h5 class="fw-bold mb-4">Donation Status Distribution</h5>
+                            <div class="chart-container" style="height: 350px;">
+                                <canvas id="growthChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4" data-aos="fade-up" data-aos-delay="100">
+                        <div class="card-enterprise h-100">
+                            <h5 class="fw-bold mb-4">Quick Actions</h5>
+                            <div class="d-flex flex-column gap-3">
+                                <a href="/admin/users" class="btn btn-outline-primary text-start px-4 py-3 rounded-3"><i class="fa-solid fa-users me-2"></i> Manage Users</a>
+                                <a href="/admin/verification" class="btn btn-outline-warning text-start px-4 py-3 rounded-3"><i class="fa-solid fa-user-check me-2"></i> Verify NGOs</a>
+                                <a href="/admin/monitoring" class="btn btn-outline-success text-start px-4 py-3 rounded-3"><i class="fa-solid fa-eye me-2"></i> Monitor Donations</a>
+                                <a href="/admin/reports" class="btn btn-outline-secondary text-start px-4 py-3 rounded-3"><i class="fa-solid fa-chart-bar me-2"></i> View Reports</a>
+                                <a href="/admin/analytics" class="btn btn-outline-dark text-start px-4 py-3 rounded-3"><i class="fa-solid fa-brain me-2"></i> Analytics</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <nav th:replace="~{fragments/common :: scripts}"></nav>
+    <script>
+        let growthChartInstance = null;
+
+        async function loadAdminStats() {
+            try {
+                const stats = await window.api.get('/admin/stats');
+                const fields = ['totalUsers','totalNgos','totalDonations','pendingVerifications',
+                                'availableDonations','acceptedDonations','collectedDonations','expiredDonations',
+                                'totalRequests', 'pendingRequests', 'acceptedRequests', 'assignedRequests', 
+                                'pickupInProgressRequests', 'collectedRequests', 'receivedRequests', 'deliveredRequests', 'rejectedRequests'];
+                fields.forEach(field => {
+                    const el = document.getElementById('stat-' + field);
+                    if (el) { el.textContent = (stats[field] ?? 0).toLocaleString(); el.classList.remove('skeleton'); }
+                });
+
+                const ctx = document.getElementById('growthChart').getContext('2d');
+                if (growthChartInstance) {
+                    growthChartInstance.destroy();
+                }
+                growthChartInstance = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Available','Accepted','Collected','Expired'],
+                        datasets: [{
+                            data: [stats.availableDonations||0, stats.acceptedDonations||0, stats.collectedDonations||0, stats.expiredDonations||0],
+                            backgroundColor: ['#10b981','#3b82f6','#a855f7','#ef4444'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+                });
+            } catch(e) {
+                document.querySelectorAll('.skeleton').forEach(el => { el.textContent = '—'; el.classList.remove('skeleton'); });
+                if (window.showToast) window.showToast('Could not load dashboard statistics.', 'error');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadAdminStats();
+
+            if (window.wsService) {
+                window.wsService.on('new_donation', loadAdminStats);
+                window.wsService.on('donation_update', loadAdminStats);
+                window.wsService.on('notification', loadAdminStats);
+            }
+
+            setInterval(loadAdminStats, 10000);
+        });
+    </script>
+    <style>.fw-800 { font-weight: 800; }</style>
+</body>
+</html>

@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  # =========================================================================
+  # MySQL Database Service
+  # =========================================================================
+  mysql:
+    image: mysql:8.0
+    container_name: foodrescue-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-foodrescue}
+      MYSQL_USER: ${MYSQL_USER:-foodrescue_user}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-change_this_to_a_secure_password}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-change_this_to_a_secure_root_password}
+    # To keep db access internal to docker network, we do NOT expose ports to host.
+    # If host access is required for local debugging, uncomment the lines below:
+    # ports:
+    #   - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - foodrescue-net
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u$$MYSQL_USER", "-p$$MYSQL_PASSWORD"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+  # =========================================================================
+  # Spring Boot Application Service
+  # =========================================================================
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: foodrescue-app
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    ports:
+      - "${PORT:-8080}:8080"
+    environment:
+      DB_URL: ${DB_URL:-jdbc:mysql://mysql:3306/foodrescue?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true&createDatabaseIfNotExist=true}
+      DB_USERNAME: ${DB_USERNAME:-foodrescue_user}
+      DB_PASSWORD: ${DB_PASSWORD:-change_this_to_a_secure_password}
+      JWT_SECRET: ${JWT_SECRET:-404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}
+      PORT: 8080
+      UPLOAD_DIR: /app/uploads
+    volumes:
+      - upload_data:/app/uploads
+    networks:
+      - foodrescue-net
+
+volumes:
+  mysql_data:
+    name: foodrescue_mysql_data
+  upload_data:
+    name: foodrescue_upload_data
+
+networks:
+  foodrescue-net:
+    name: foodrescue-network

@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/common :: head('Donor Dashboard')}"></head>
+<body>
+
+    <div class="app-wrapper">
+        <!-- Sidebar -->
+        <aside th:replace="~{fragments/sidebar :: sidebar('dashboard', 'DONOR')}"></aside>
+
+        <!-- Main Container -->
+        <div class="main-container">
+            <!-- Navbar -->
+            <nav th:replace="~{fragments/navbar :: navbar}"></nav>
+
+            <!-- Dashboard Content -->
+            <main class="content-body">
+                <div class="d-flex justify-content-between align-items-center mb-5">
+                    <div>
+                        <h2 class="fw-bold mb-1" id="welcome-name">Welcome back! 👋</h2>
+                        <p class="text-muted mb-0" id="impact-sub">Loading your impact summary…</p>
+                    </div>
+                    <div class="d-flex gap-3">
+                        <button class="btn btn-white border shadow-sm px-4" id="export-report-btn" aria-label="Export donation report to CSV">
+                            <i class="fa-solid fa-download me-2" aria-hidden="true"></i> Export Report
+                        </button>
+                        <a href="/donor/upload" class="btn btn-enterprise btn-enterprise-primary px-4">
+                            <i class="fa-solid fa-plus me-2"></i> New Donation
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Stat Grid -->
+                <div class="row g-4 mb-5">
+                    <div class="col-xl-3 col-md-6" data-aos="fade-up" data-aos-delay="100">
+                        <div class="card-enterprise border-0 shadow-sm border-start border-success border-4 h-100">
+                            <div class="d-flex justify-content-between mb-3">
+                                <div class="text-muted small fw-bold text-uppercase">Total Donations</div>
+                                <div class="text-success small fw-bold"><i class="fa-solid fa-arrow-up me-1"></i> 12%</div>
+                            </div>
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="bg-success bg-opacity-10 text-success p-3 rounded-circle">
+                                    <i class="fa-solid fa-hand-holding-heart fs-4"></i>
+                                </div>
+                                <h2 class="mb-0 fw-800" id="stat-total">—</h2>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-3 col-md-6" data-aos="fade-up" data-aos-delay="200">
+                        <div class="card-enterprise border-0 shadow-sm border-start border-primary border-4 h-100">
+                            <div class="text-muted small fw-bold text-uppercase mb-3">Food Saved (kg)</div>
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="bg-primary bg-opacity-10 text-primary p-3 rounded-circle">
+                                    <i class="fa-solid fa-weight-hanging fs-4"></i>
+                                </div>
+                                <h2 class="mb-0 fw-800" id="stat-food">—</h2>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-3 col-md-6" data-aos="fade-up" data-aos-delay="300">
+                        <div class="card-enterprise border-0 shadow-sm border-start border-warning border-4 h-100">
+                            <div class="text-muted small fw-bold text-uppercase mb-3">CO₂ Reduction (kg)</div>
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="bg-warning bg-opacity-10 text-warning p-3 rounded-circle">
+                                    <i class="fa-solid fa-leaf fs-4"></i>
+                                </div>
+                                <h2 class="mb-0 fw-800" id="stat-co2">—</h2>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-3 col-md-6" data-aos="fade-up" data-aos-delay="400">
+                        <div class="card-enterprise border-0 shadow-sm border-start border-info border-4 h-100">
+                            <div class="text-muted small fw-bold text-uppercase mb-3">Impact Score</div>
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="bg-info bg-opacity-10 text-info p-3 rounded-circle">
+                                    <i class="fa-solid fa-star fs-4"></i>
+                                </div>
+                                <h2 class="mb-0 fw-800" id="stat-impact">—</h2>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-4">
+                    <!-- Donation Activity Chart -->
+                    <div class="col-lg-8" data-aos="fade-up">
+                        <div class="card-enterprise h-100">
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                <h5 class="fw-bold mb-0">Monthly Donation Trend</h5>
+                                <select class="form-select form-select-sm border-0 bg-light px-3" style="width: 130px;">
+                                    <option>Last 6 Months</option>
+                                    <option>This Year</option>
+                                </select>
+                            </div>
+                            <canvas id="donationChart" height="280"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Active Requests -->
+                    <div class="col-lg-4" data-aos="fade-up" data-aos-delay="100">
+                        <div class="card-enterprise h-100">
+                            <h5 class="fw-bold mb-4">Live Activity Feed</h5>
+                            <div class="activity-timeline" id="donor-activity-timeline">
+                                <div class="text-center py-4 text-muted small"><i class="fa-solid fa-spinner fa-spin me-2"></i>Loading activity feed...</div>
+                            </div>
+                            <button class="btn btn-link text-success fw-bold small p-0 mt-4 text-decoration-none">View All Activity <i class="fa-solid fa-chevron-right ms-1 fs-xs"></i></button>
+                        </div>
+                    </div>
+
+                    <!-- Recent Donations Table -->
+                    <div class="col-12" data-aos="fade-up">
+                        <div class="card-enterprise">
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                <h5 class="fw-bold mb-0">Active Donations Track</h5>
+                                <a href="/donor/history" class="text-primary small fw-bold text-decoration-none">View Full History</a>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle">
+                                    <thead class="bg-light">
+                                        <tr>
+                                            <th class="border-0 rounded-start">ID</th>
+                                            <th class="border-0">Food Type</th>
+                                            <th class="border-0">NGO Partner</th>
+                                            <th class="border-0">Quantity</th>
+                                            <th class="border-0">Status</th>
+                                            <th class="border-0">Estimated Collection</th>
+                                            <th class="border-0 rounded-end text-end">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr id="donations-loading-row">
+                                            <td colspan="7" class="text-center py-4 text-muted small">
+                                                <div class="spinner-border spinner-border-sm text-success me-2" role="status"></div>
+                                                Loading donations…
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <nav th:replace="~{fragments/common :: scripts}"></nav>
+    <div class="mobile-nav" role="navigation" aria-label="Mobile bottom navigation">
+        <a href="/donor/dashboard" class="mobile-nav-item active" aria-current="page"><i class="fa-solid fa-chart-pie" aria-hidden="true"></i><span>Home</span></a>
+        <a href="/donor/upload" class="mobile-nav-item"><i class="fa-solid fa-plus-circle" aria-hidden="true"></i><span>Donate</span></a>
+        <a href="/donor/tracking" class="mobile-nav-item"><i class="fa-solid fa-route" aria-hidden="true"></i><span>Track</span></a>
+        <a href="/donor/impact" class="mobile-nav-item"><i class="fa-solid fa-trophy" aria-hidden="true"></i><span>Impact</span></a>
+    </div>
+
+    <script>
+        // ── Dynamic Greeting via StateManager ──────────────────────────────────
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.stateManager) {
+                window.stateManager.on('userChanged', (user) => {
+                    const greetEl = document.getElementById('welcome-name');
+                    // Use organizationName if set, otherwise fall back to name
+                    const displayName = user?.organizationName || user?.name;
+                    if (greetEl && displayName) {
+                        greetEl.textContent = `Welcome back, ${displayName}! 👋`;
+                    }
+                });
+            }
+        });
+
+        // ── Load Dashboard Stats from API ─────────────────────────────────────
+        async function loadActivityFeed() {
+            const timeline = document.getElementById('donor-activity-timeline');
+            if (!timeline || !window.api) return;
+
+            try {
+                const notifications = await window.api.get('/notifications');
+                if (notifications && notifications.length > 0) {
+                    timeline.innerHTML = '';
+                    notifications.slice(0, 5).forEach(n => {
+                        const dateText = n.createdAt ? new Date(n.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '';
+                        
+                        const item = document.createElement('div');
+                        item.className = 'activity-item pb-4 position-relative';
+                        const color = n.type === 'DONATION_CREATED' ? 'primary' : (n.type === 'REQUEST_ACCEPTED' || n.type === 'DELIVERED' ? 'success' : 'warning');
+                        item.innerHTML = `
+                            <div class="bg-${color} position-absolute start-0 top-0 h-100 opacity-20" style="width: 2px; margin-left: 9px;"></div>
+                            <div class="d-flex gap-3 position-relative z-index-1">
+                                <div class="bg-${color} rounded-circle" style="width: 20px; height: 20px; border: 4px solid var(--bg-surface); flex-shrink:0;"></div>
+                                <div>
+                                    <p class="small fw-bold mb-0 text-dark">${n.type ? n.type.replace(/_/g, ' ') : 'Activity'}</p>
+                                    <p class="small text-muted mb-1">${n.message}</p>
+                                    <span class="badge bg-${color} bg-opacity-10 text-${color} small border-0">${dateText}</span>
+                                </div>
+                            </div>
+                        `;
+                        timeline.appendChild(item);
+                    });
+                } else {
+                    timeline.innerHTML = '<div class="text-center py-4 text-muted small">No recent activity.</div>';
+                }
+            } catch (e) {
+                console.warn('[Donor Dashboard] Could not load activity timeline:', e.message);
+                timeline.innerHTML = '<div class="text-center py-4 text-muted small">Failed to load activity feed.</div>';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            loadActivityFeed();
+            const tbody = document.querySelector('.table tbody');
+            try {
+                // Call real donor donations endpoint
+                const donations = await window.api.get('/food/donor');
+                const total = donations ? donations.length : 0;
+                const totalKg = donations ? donations.reduce((sum, d) => sum + (parseFloat(d.quantityKg) || 0), 0) : 0;
+
+                const elTotal = document.getElementById('stat-total');
+                if (elTotal) { elTotal.textContent = total; }
+                const elFood = document.getElementById('stat-food');
+                if (elFood) { elFood.textContent = totalKg.toFixed(1); }
+                // CO2: ~1.5kg CO2 per kg food saved
+                const elCo2 = document.getElementById('stat-co2');
+                if (elCo2) { elCo2.textContent = (totalKg * 1.5).toFixed(1); }
+
+                // Update impact subtitle with real donation count
+                const subEl = document.getElementById('impact-sub');
+                if (subEl) {
+                    if (total > 0) {
+                        // Rough estimate: 1 kg of food ≈ 2 meals
+                        const estimated = Math.round(totalKg * 2);
+                        subEl.innerHTML = `Your donations have provided an estimated <span class="text-dark fw-bold">${estimated.toLocaleString()} meals</span> across ${total} donation${total !== 1 ? 's' : ''}.`;
+                    } else {
+                        subEl.textContent = 'No donations yet — start rescuing food today!';
+                    }
+                }
+
+                // Update recent donations table
+                if (tbody) {
+                    if (donations && donations.length > 0) {
+                        tbody.innerHTML = donations.slice(0, 5).map(d => `
+                            <tr>
+                                <td class="fw-bold">#${d.id}</td>
+                                <td>${d.title || 'N/A'}</td>
+                                <td>${d.acceptedByNgoName || '—'}</td>
+                                <td>${d.quantityKg} kg</td>
+                                <td><span class="badge bg-${statusColor(d.status)} bg-opacity-10 text-${statusColor(d.status)} px-3">${d.status}</span></td>
+                                <td>${d.expiryTime ? new Date(d.expiryTime).toLocaleString() : '—'}</td>
+                                <td class="text-end"><a href="/donor/tracking" class="btn btn-light btn-sm rounded-pill px-3">Track</a></td>
+                            </tr>
+                        `).join('');
+                    } else {
+                        tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-muted small">No donations found. <a href="/donor/upload" class="text-success fw-bold">Create one now</a></td></tr>';
+                    }
+                }
+            } catch(e) {
+                console.warn('[Donor Dashboard] Could not load stats:', e.message);
+                if (tbody) {
+                    tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-danger small">Failed to load recent donations. Please reload.</td></tr>';
+                }
+            }
+        });
+
+        function statusColor(status) {
+            const map = { AVAILABLE: 'success', ACCEPTED: 'primary', COLLECTED: 'info', EXPIRED: 'danger', REQUESTED: 'warning' };
+            return map[status] || 'secondary';
+        }
+
+
+        // ── WebSocket Live Activity Feed ──────────────────────────────────────
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!window.wsService) return;
+
+            window.wsService.on('donation_update', (data) => {
+                addActivityItem({
+                    color:   'success',
+                    title:   data.title || 'Donation Updated',
+                    sub:     `By ${data.ngoName || 'an NGO'} • just now`,
+                    badge:   data.statusLabel || data.status
+                });
+                if (window.showToast) window.showToast(`Update: ${data.title || 'Donation status changed'}`, 'info');
+            });
+
+            window.wsService.on('new_donation', (data) => {
+                addActivityItem({
+                    color:   'primary',
+                    title:   'New Match Found',
+                    sub:     `${data.ngoName || 'NGO'} is nearby • just now`,
+                    badge:   'Match Available'
+                });
+            });
+        });
+
+        function addActivityItem({ color, title, sub, badge }) {
+            const timeline = document.querySelector('.activity-timeline');
+            if (!timeline) return;
+
+            const item = document.createElement('div');
+            item.className = 'activity-item pb-4 position-relative';
+            item.innerHTML = `
+                <div class="bg-${color} position-absolute start-0 top-0 h-100 opacity-20" style="width: 2px; margin-left: 9px;"></div>
+                <div class="d-flex gap-3 position-relative z-index-1">
+                    <div class="bg-${color} rounded-circle" style="width: 20px; height: 20px; border: 4px solid var(--bg-surface); flex-shrink:0;"></div>
+                    <div>
+                        <p class="small fw-bold mb-0 text-dark">${title}</p>
+                        <p class="small text-muted mb-1">${sub}</p>
+                        <span class="badge bg-${color} bg-opacity-10 text-${color} small border-0">${badge}</span>
+                    </div>
+                </div>
+            `;
+            // Prepend so newest is first
+            timeline.insertBefore(item, timeline.firstChild);
+
+            // Max 5 items in feed
+            const items = timeline.querySelectorAll('.activity-item');
+            if (items.length > 5) items[items.length - 1].remove();
+        }
+
+        // ── Export Report ─────────────────────────────────────────────────────
+        document.getElementById('export-report-btn')?.addEventListener('click', async () => {
+            if (!window.reportGenerator) return;
+            try {
+                const data = await window.api.get('/donations?size=100');
+                const rows = (data.content || data || []).map(d => ({
+                    ID: d.id, Title: d.title, Category: d.category,
+                    QuantityKg: d.quantityKg, Status: d.status, CreatedAt: d.createdAt
+                }));
+                window.reportGenerator.exportToCSV(rows, 'donation_report');
+                if (window.showToast) window.showToast('Report downloaded!', 'success');
+            } catch(e) {
+                if (window.showToast) window.showToast('Export failed: ' + e.message, 'error');
+            }
+        });
+        // ── Donation Chart ────────────────────────────────────────────────────
+        let donationChart = null;
+
+        async function initDonationChart() {
+            const ctx = document.getElementById('donationChart').getContext('2d');
+            let labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+            let dataPoints = [0, 0, 0, 0, 0, 0];
+
+            if (window.api) {
+                try {
+                    const data = await window.api.get('/donor/analytics?period=monthly');
+                    if (data && data.trends) {
+                        labels = data.trends.labels || labels;
+                        dataPoints = data.trends.values || dataPoints;
+                    }
+                } catch(e) {
+                    console.warn('[Donor Dashboard] Could not load chart trends:', e.message);
+                }
+            }
+
+            donationChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Donations (kg)',
+                        data: dataPoints,
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        borderWidth: 3,
+                        pointBackgroundColor: '#fff',
+                        pointBorderColor: '#10b981',
+                        pointBorderWidth: 2,
+                        pointRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, grid: { display: true, color: 'rgba(0,0,0,0.05)' }, border: { display: false } },
+                        x: { grid: { display: false }, border: { display: false } }
+                    }
+                }
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initDonationChart();
+        });
+
+        function updateChart(data) {
+            if (!donationChart || !data) return;
+            donationChart.data.labels   = data.labels || donationChart.data.labels;
+            donationChart.data.datasets[0].data = data.values || donationChart.data.datasets[0].data;
+            donationChart.update();
+        }
+    </script>
+    <style>
+        .fs-xs { font-size: 0.65rem; }
+        .fw-800 { font-weight: 800; }
+        .ms-n2 { margin-left: -0.5rem; }
+        .activity-item:last-child { padding-bottom: 0 !important; }
+        .activity-item:last-child div::after { display: none; }
+    </style>
+</body>
+</html>
+

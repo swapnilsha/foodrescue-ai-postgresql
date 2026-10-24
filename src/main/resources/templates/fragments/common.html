@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:fragment="head(title)">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${title}">FoodRescue AI</title>
+    
+    <!-- Google Fonts: Inter & Outfit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    
+    <!-- Custom Design System -->
+    <link rel="stylesheet" th:href="@{/css/main.css}">
+    
+    <!-- Animation Library (AOS) -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+</head>
+
+<body th:fragment="scripts">
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- AOS Animations -->
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+
+    <!-- WebSockets Support -->
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+    
+    <!-- Enterprise Core Modules (load order matters) -->
+    <script th:src="@{/js/api-service.js}"></script>
+    <script th:src="@{/js/state-manager.js}"></script>
+    <script th:src="@{/js/websocket-service.js}"></script>
+    <script th:src="@{/js/auth-guard.js}"></script>
+    <script th:src="@{/js/data-tables.js}"></script>
+    <script th:src="@{/js/report-generator.js}"></script>
+    <script th:src="@{/js/ai-workflow.js}"></script>
+    <script th:src="@{/js/map-integration.js}"></script>
+
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <!-- Global Error Boundary Modal                                        -->
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <div id="global-error-modal"
+         role="alertdialog"
+         aria-modal="true"
+         aria-labelledby="error-modal-title"
+         aria-describedby="error-modal-msg"
+         style="display:none; position:fixed; inset:0; z-index:10001; background:rgba(0,0,0,0.5); backdrop-filter:blur(4px); align-items:center; justify-content:center;">
+        <div class="bg-white rounded-4 shadow-lg p-5 text-center" style="max-width:420px; width:90%; animation: fadeInScale 0.3s ease;">
+            <div class="bg-danger bg-opacity-10 text-danger p-3 rounded-circle d-inline-flex mb-4">
+                <i class="fa-solid fa-triangle-exclamation fs-3" aria-hidden="true"></i>
+            </div>
+            <h5 class="fw-bold" id="error-modal-title">An Error Occurred</h5>
+            <p class="text-muted small" id="error-modal-msg">Something went wrong. Please try again or contact support.</p>
+            <button onclick="document.getElementById('global-error-modal').style.display='none'"
+                    class="btn btn-dark rounded-pill px-5 mt-2"
+                    aria-label="Dismiss error">
+                Dismiss
+            </button>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <!-- Global Toast Notification Container                                -->
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <div id="toast-container"
+         aria-live="polite"
+         aria-atomic="false"
+         class="position-fixed bottom-0 end-0 p-4"
+         style="z-index: 10002; max-width: 380px;">
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <!-- Skeleton Loader Styles & Global Utility CSS                        -->
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <style>
+        /* Skeleton Loader Utility */
+        .skeleton {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: skeleton-shimmer 1.5s infinite;
+            border-radius: 6px;
+            color: transparent !important;
+            pointer-events: none;
+        }
+        .skeleton * { visibility: hidden; }
+        @keyframes skeleton-shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        /* Error Boundary Animation */
+        @keyframes fadeInScale {
+            from { opacity: 0; transform: scale(0.92); }
+            to   { opacity: 1; transform: scale(1); }
+        }
+
+        /* Toast Styles */
+        .fr-toast {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            background: white;
+            border-radius: 12px;
+            padding: 14px 16px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.12), 0 1px 4px rgba(0,0,0,0.06);
+            margin-top: 10px;
+            border-left: 4px solid #10b981;
+            animation: toastIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+            max-width: 360px;
+        }
+        .fr-toast.error { border-left-color: #ef4444; }
+        .fr-toast.warning { border-left-color: #f59e0b; }
+        .fr-toast.info { border-left-color: #3b82f6; }
+        @keyframes toastIn {
+            from { opacity: 0; transform: translateX(100%); }
+            to   { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes toastOut {
+            from { opacity: 1; transform: translateX(0); }
+            to   { opacity: 0; transform: translateX(120%); }
+        }
+
+        /* Image lazy loading fade-in */
+        img[loading="lazy"] { opacity: 0; transition: opacity 0.4s ease; }
+        img[loading="lazy"].loaded { opacity: 1; }
+    </style>
+
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <!-- Global App Logic                                                   -->
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <script>
+        // Initialize AOS
+        AOS.init({ duration: 800, easing: 'ease-in-out', once: true });
+
+        // ── Toast Notification System ─────────────────────────────────────
+        window.showToast = function(message, type = 'success', duration = 4500) {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+
+            const icons = {
+                success: 'fa-circle-check',
+                error:   'fa-circle-exclamation',
+                warning: 'fa-triangle-exclamation',
+                info:    'fa-circle-info'
+            };
+            const colors = {
+                success: '#10b981', error: '#ef4444', warning: '#f59e0b', info: '#3b82f6'
+            };
+
+            const toast = document.createElement('div');
+            toast.className = `fr-toast ${type !== 'success' ? type : ''}`;
+            toast.setAttribute('role', 'status');
+            toast.setAttribute('aria-live', 'polite');
+            toast.innerHTML = `
+                <div style="min-width:24px; padding-top:2px;">
+                    <i class="fa-solid ${icons[type] || icons.info}" style="color: ${colors[type] || colors.info};" aria-hidden="true"></i>
+                </div>
+                <div class="flex-grow-1">
+                    <p class="mb-0 small fw-semibold text-dark" style="line-height: 1.4;">${message}</p>
+                </div>
+                <button onclick="this.closest('.fr-toast').remove()" 
+                        class="btn p-0 border-0 text-muted" 
+                        style="line-height:1; min-width:20px;"
+                        aria-label="Dismiss notification">
+                    <i class="fa-solid fa-xmark small" aria-hidden="true"></i>
+                </button>
+            `;
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.animation = 'toastOut 0.3s ease forwards';
+                setTimeout(() => toast.remove(), 300);
+            }, duration);
+        };
+
+        // ── Error Boundary ────────────────────────────────────────────────
+        window.showErrorModal = function(message) {
+            const modal = document.getElementById('global-error-modal');
+            const msgEl = document.getElementById('error-modal-msg');
+            if (modal && msgEl) {
+                msgEl.textContent = message || 'Something went wrong. Please try again.';
+                modal.style.display = 'flex';
+                modal.querySelector('button')?.focus();
+            }
+        };
+
+        // Wire global error events from stateManager
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.stateManager) {
+                window.stateManager.on('error', (msg) => window.showErrorModal(msg));
+                window.stateManager.on('loading', (msg) => window.showToast(msg || 'Loading...', 'info'));
+                window.stateManager.on('loading_complete', () => {});
+            }
+        });
+
+        // ── WebSocket Toast Integration ───────────────────────────────────
+        window.addEventListener('app-toast', (e) => {
+            if (e.detail && e.detail.message) {
+                window.showToast(e.detail.message, e.detail.type || 'info');
+            }
+        });
+
+        // ── Image Lazy-Load Fade ──────────────────────────────────────────
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('img[loading="lazy"]').forEach(img => {
+                if (img.complete) {
+                    img.classList.add('loaded');
+                } else {
+                    img.addEventListener('load', () => img.classList.add('loaded'));
+                }
+            });
+        });
+
+        // ── Theme Management ──────────────────────────────────────────────
+        function toggleTheme() {
+            if (window.stateManager) {
+                window.stateManager.toggleTheme();
+            } else {
+                document.body.classList.toggle('dark-mode');
+            }
+            const isDark = document.body.classList.contains('dark-mode');
+            updateThemeIcon(isDark);
+        }
+
+        function updateThemeIcon(isDark) {
+            const icon = document.querySelector('#theme-toggle-btn i');
+            if (icon) {
+                icon.className = isDark ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+            }
+        }
+
+        // ── Mobile Sidebar Toggle ─────────────────────────────────────────
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            if (sidebar) sidebar.classList.toggle('show');
+        }
+    </script>
+</body>
+</html>

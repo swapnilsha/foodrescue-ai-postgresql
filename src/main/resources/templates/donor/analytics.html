@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/common :: head('Donor Analytics')}"></head>
+<body>
+
+    <div class="app-wrapper">
+        <aside th:replace="~{fragments/sidebar :: sidebar('analytics', 'DONOR')}"></aside>
+
+        <div class="main-container">
+            <nav th:replace="~{fragments/navbar :: navbar}"></nav>
+
+            <main class="content-body">
+                <div id="analytics-error-message" style="display:none;" class="mb-4"></div>
+                <div class="mb-5 d-flex justify-content-between align-items-end" data-aos="fade-down">
+                    <div>
+                        <h2 class="fw-bold mb-1">Impact & Donor Analytics</h2>
+                        <p class="text-muted mb-0">Deep dive into your contribution patterns and social ROI.</p>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <div class="btn-group shadow-sm">
+                            <button class="btn btn-white border px-3 active period-btn" data-period="monthly" onclick="setPeriod('monthly')" id="btn-period-monthly">Monthly</button>
+                            <button class="btn btn-white border px-3 period-btn" data-period="quarterly" onclick="setPeriod('quarterly')" id="btn-period-quarterly">Quarterly</button>
+                            <button class="btn btn-white border px-3 period-btn" data-period="yearly" onclick="setPeriod('yearly')" id="btn-period-yearly">Yearly</button>
+                        </div>
+                        <button class="btn btn-outline-dark" id="donor-export-report-btn" onclick="exportDonorReport()" aria-label="Export donor analytics report">
+                            <i class="fa-solid fa-file-arrow-down me-2" aria-hidden="true"></i>Export Report
+                        </button>
+                    </div>
+                </div>
+
+                <div class="row g-4">
+                    <!-- Donation Distribution by Category -->
+                    <div class="col-lg-6" data-aos="fade-up">
+                        <div class="card-enterprise h-100">
+                            <h5 class="fw-bold mb-4">Donation Mix</h5>
+                            <div class="chart-container" style="height: 300px;">
+                                <canvas id="categoryChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Acceptance Rate & Reliability -->
+                    <div class="col-lg-6" data-aos="fade-up" data-aos-delay="100">
+                        <div class="card-enterprise h-100">
+                            <h5 class="fw-bold mb-4">Rescue Efficiency</h5>
+                            <div class="row h-100 align-items-center">
+                                <div class="col-md-6 text-center">
+                                    <div class="position-relative d-inline-block">
+                                        <canvas id="efficiencyChart" width="180" height="180"></canvas>
+                                        <div class="position-absolute top-50 start-50 translate-middle">
+                                            <h2 class="fw-bold mb-0" id="donor-reliability-rate">98%</h2>
+                                            <p class="small text-muted mb-0">Reliability</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="d-flex flex-column gap-3">
+                                        <div class="d-flex justify-content-between border-bottom pb-2">
+                                            <span class="text-muted small">Avg. Pickup Time</span>
+                                            <span class="fw-bold" id="donor-avg-pickup">0 mins</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between border-bottom pb-2">
+                                            <span class="text-muted small">Acceptance Rate</span>
+                                            <span class="fw-bold text-success" id="donor-acceptance-rate">0%</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between border-bottom pb-2">
+                                            <span class="text-muted small">Total Donations</span>
+                                            <span class="fw-bold text-primary" id="donor-total-donations">0</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Regional Impact Heatmap (Mock) -->
+                    <div class="col-lg-12" data-aos="fade-up">
+                        <div class="card-enterprise">
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                <h5 class="fw-bold mb-0">Community Reach Portfolio</h5>
+                                <div class="small fw-bold text-primary" id="top-partner-label">Top Partner: None</div>
+                            </div>
+                            <div class="row g-4 overflow-hidden" id="partner-distribution-container">
+                                <!-- Rendered dynamically -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Carbon Offset Projection -->
+                    <div class="col-12" data-aos="fade-up">
+                        <div class="card-enterprise bg-dark text-white border-0 shadow-lg" style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%) !important;">
+                            <div class="row align-items-center">
+                                <div class="col-md-8 p-4">
+                                    <h4 class="fw-bold mb-3 d-flex align-items-center gap-2">
+                                        <i class="fa-solid fa-cloud-arrow-down text-info"></i> Carbon Footprint Reduction
+                                    </h4>
+                                    <p class="opacity-75 mb-4" id="carbon-text-description">Your efforts in reducing food waste have prevented approximately 0.0 tons of CO2 emissions from entering the atmosphere. That's equivalent to planting <span class="text-info fw-bold" id="carbon-trees-count">0 mature trees</span>.</p>
+                                    <div class="d-flex gap-4 flex-wrap">
+                                        <div class="text-center">
+                                            <h3 class="fw-bold text-info mb-0" id="carbon-co2-offset">0</h3>
+                                            <p class="small opacity-50 mb-0">kg CO2 Offset</p>
+                                        </div>
+                                        <div class="text-center">
+                                            <h3 class="fw-bold text-success mb-0" id="carbon-meals-saved">0</h3>
+                                            <p class="small opacity-50 mb-0">Meals Saved</p>
+                                        </div>
+                                        <div class="text-center">
+                                            <h3 class="fw-bold text-warning mb-0" id="carbon-food-saved">0</h3>
+                                            <p class="small opacity-50 mb-0">kg Food Saved</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 text-end d-none d-md-block opacity-10">
+                                    <i class="fa-solid fa-leaf" style="font-size: 15rem;"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <nav th:replace="~{fragments/common :: scripts}"></nav>
+    <script>
+        let currentPeriod = 'monthly';
+        let categoryChart = null;
+        let efficiencyChart = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadAnalyticsData('monthly');
+        });
+
+        function setPeriod(period) {
+            currentPeriod = period;
+            document.querySelectorAll('.period-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('btn-period-' + period)?.classList.add('active');
+            loadAnalyticsData(period);
+        }
+
+        async function loadAnalyticsData(period = 'monthly') {
+            const errorContainer = document.getElementById('analytics-error-message');
+            if (errorContainer) errorContainer.style.display = 'none';
+
+            if (!window.api) return;
+
+            try {
+                const data = await window.api.get('/donor/analytics?period=' + period);
+                if (!data) throw new Error("No data returned from platform.");
+
+                // Set reliability text rate & pickup time
+                document.getElementById('donor-reliability-rate').textContent = (data.successRate || 0) + '%';
+                document.getElementById('donor-avg-pickup').textContent = (data.avgPickupTimeMinutes || 0) + ' mins';
+                document.getElementById('donor-acceptance-rate').textContent = (data.successRate || 0) + '%';
+                document.getElementById('donor-total-donations').textContent = data.totalDonations || 0;
+
+                // Update Carbon Footprint stats
+                document.getElementById('carbon-co2-offset').textContent = (data.co2ReductionKg || 0).toLocaleString();
+                document.getElementById('carbon-meals-saved').textContent = (data.mealsSaved || 0).toLocaleString();
+                document.getElementById('carbon-food-saved').textContent = (data.totalQuantityKg || 0).toLocaleString();
+                const tons = ((data.co2ReductionKg || 0) / 1000).toFixed(1);
+                const trees = Math.round((data.co2ReductionKg || 0) / 22);
+                document.getElementById('carbon-trees-count').textContent = trees + ' mature trees';
+                document.getElementById('carbon-text-description').innerHTML = `Your efforts in reducing food waste have prevented approximately ${tons} tons of CO2 emissions from entering the atmosphere. That's equivalent to planting <span class="text-info fw-bold">${trees} mature trees</span>.`;
+
+                // Update Community Reach Portfolio
+                const pContainer = document.getElementById('partner-distribution-container');
+                const topPartnerLabel = document.getElementById('top-partner-label');
+                if (pContainer) {
+                    const partners = Object.entries(data.partnerDistribution || {});
+                    if (partners.length > 0) {
+                        // Find top partner
+                        partners.sort((a, b) => b[1] - a[1]);
+                        topPartnerLabel.textContent = 'Top Partner: ' + partners[0][0];
+
+                        pContainer.innerHTML = partners.map(([ngoName, count], idx) => `
+                            <div class="col-md-3">
+                                <div class="p-3 bg-light rounded-4 text-center">
+                                    <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(ngoName)}&background=random&color=fff" class="rounded-circle mb-2" width="48">
+                                    <h6 class="fw-bold mb-1 small text-truncate" title="${ngoName}">${ngoName}</h6>
+                                    <p class="small text-muted mb-2">${count} Mission${count !== 1 ? 's' : ''} Completed</p>
+                                    <div class="progress" style="height: 4px;">
+                                        <div class="progress-bar bg-success" style="width: 100%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('');
+                    } else {
+                        topPartnerLabel.textContent = 'Top Partner: None';
+                        pContainer.innerHTML = '<div class="col-12 text-center py-4 text-muted small">No partner NGOs yet. Once an NGO accepts your donation requests, they will appear here.</div>';
+                    }
+                }
+
+                // Update charts dynamically
+                const catCtx = document.getElementById('categoryChart').getContext('2d');
+                if (categoryChart) categoryChart.destroy();
+
+                const catLabels = Object.keys(data.categoryDistribution || {});
+                const catValues = Object.values(data.categoryDistribution || {});
+
+                categoryChart = new Chart(catCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: catLabels.length > 0 ? catLabels.map(l => l.charAt(0).toUpperCase() + l.slice(1)) : ['No Data'],
+                        datasets: [{
+                            label: 'Weight (kg)',
+                            data: catValues.length > 0 ? catValues : [0],
+                            backgroundColor: ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6'],
+                            borderRadius: 8
+                        }]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            x: { grid: { display: false }, border: { display: false } },
+                            y: { grid: { display: false }, border: { display: false } }
+                        }
+                    }
+                });
+
+                const effCtx = document.getElementById('efficiencyChart').getContext('2d');
+                if (efficiencyChart) efficiencyChart.destroy();
+
+                const successRate = data.successRate || 0;
+                efficiencyChart = new Chart(effCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Completed', 'Pending'],
+                        datasets: [{
+                            data: [successRate, 100 - successRate],
+                            backgroundColor: ['#10b981', '#e2e8f0'],
+                            borderWidth: 0,
+                            weight: 0.1
+                        }]
+                    },
+                    options: {
+                        cutout: '85%',
+                        responsive: true,
+                        plugins: { legend: { display: false } }
+                    }
+                });
+
+            } catch (err) {
+                console.error("Failed to load donor analytics:", err);
+                if (errorContainer) {
+                    errorContainer.style.display = 'block';
+                    errorContainer.innerHTML = `
+                        <div class="alert alert-danger d-flex align-items-center justify-content-between rounded-4 py-3 px-4 shadow-sm mb-4">
+                            <span><i class="fa-solid fa-triangle-exclamation me-2"></i>Unable to load live analytics: ${err.message || 'Network issue'}</span>
+                            <button class="btn btn-sm btn-danger px-3 py-1 rounded-pill" onclick="loadAnalyticsData('${period}')">Retry</button>
+                        </div>
+                    `;
+                }
+            }
+        }
+
+        function exportDonorReport() {
+            if (window.reportGenerator) {
+                window.reportGenerator.exportToCSV([{ period: currentPeriod }], 'donor_analytics');
+                if (window.showToast) window.showToast('Generating donor analytics report…', 'info');
+            } else {
+                if (window.showToast) window.showToast('Report generator unavailable.', 'danger');
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/common :: head('Donation History')}"></head>
+<body>
+
+    <div class="app-wrapper">
+        <aside th:replace="~{fragments/sidebar :: sidebar('history', 'DONOR')}"></aside>
+
+        <div class="main-container">
+            <nav th:replace="~{fragments/navbar :: navbar}"></nav>
+
+            <main class="content-body">
+                <div class="d-flex justify-content-between align-items-end mb-5" data-aos="fade-down">
+                    <div>
+                        <h2 class="fw-bold mb-1">Donation History</h2>
+                        <p class="text-muted mb-0">Review all your past and currently active rescue missions.</p>
+                    </div>
+                    <div>
+                        <button class="btn btn-outline-dark me-2" id="export-history-btn" onclick="exportHistoryCSV()" aria-label="Export donation history to CSV"><i class="fa-solid fa-file-export me-2" aria-hidden="true"></i> Export Data</button>
+                    </div>
+                </div>
+
+                <!-- Filters -->
+                <div class="card-enterprise border-0 shadow-sm p-3 mb-4" data-aos="fade-up">
+                    <div class="row g-3 align-items-center">
+                        <div class="col-md-4">
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-0"><i class="fa-solid fa-magnifying-glass small"></i></span>
+                                <input type="text" class="form-control bg-light border-0" placeholder="Search by ID, Food, or NGO...">
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <select class="form-select bg-light border-0">
+                                <option>Status: All</option>
+                                <option>Pending</option>
+                                <option>Completed</option>
+                                <option>Rejected</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <select class="form-select bg-light border-0">
+                                <option>Type: All</option>
+                                <option>Cooked</option>
+                                <option>Produce</option>
+                                <option>Bakery</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <input type="date" class="form-control bg-light border-0">
+                        </div>
+                        <div class="col-md-1">
+                            <button class="btn btn-dark w-100"><i class="fa-solid fa-filter"></i></button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Table -->
+                <div class="card-enterprise shadow-sm" data-aos="fade-up" data-aos-delay="100">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle" id="history-table">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th class="border-0 px-4">Donation ID</th>
+                                    <th class="border-0">Timestamp</th>
+                                    <th class="border-0">Food Item</th>
+                                    <th class="border-0">Qty (kg)</th>
+                                    <th class="border-0">NGO Partner</th>
+                                    <th class="border-0">Location</th>
+                                    <th class="border-0">Status</th>
+                                    <th class="border-0 px-4 text-end">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="history-tbody">
+                                <tr id="history-loading-row">
+                                    <td colspan="8" class="text-center py-5">
+                                        <div class="spinner-border text-success me-3" role="status" style="width: 1.5rem; height: 1.5rem;">
+                                            <span class="visually-hidden">Loading...</span>
+                                        </div>
+                                        <span class="text-muted">Loading donation history...</span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Footer: totals / empty state -->
+                    <div class="p-4 border-top d-flex justify-content-between align-items-center">
+                        <div class="small text-muted" id="history-count">Loading...</div>
+                    </div>
+                </div>
+
+            </main>
+        </div>
+    </div>
+
+    <nav th:replace="~{fragments/common :: scripts}"></nav>
+    <script>
+        function statusBadge(status) {
+            const s = (status || 'UNKNOWN').toUpperCase();
+            const map = {
+                'AVAILABLE': ['bg-warning bg-opacity-10 text-warning', 'PENDING'],
+                'ACCEPTED': ['bg-primary bg-opacity-10 text-primary', 'ACCEPTED'],
+                'COLLECTED': ['bg-success bg-opacity-10 text-success', 'COLLECTED'],
+                'EXPIRED': ['bg-danger bg-opacity-10 text-danger', 'EXPIRED'],
+                'REQUESTED': ['bg-info bg-opacity-10 text-info', 'REQUESTED'],
+            };
+            const [cls, label] = map[s] || ['bg-secondary bg-opacity-10 text-secondary', s];
+            return `<span class="badge ${cls} px-3 py-2 rounded-pill">${label}</span>`;
+        }
+
+        function formatDate(iso) {
+            if (!iso) return '—';
+            const d = new Date(iso);
+            return d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+                + '<br><span class="text-muted">' + d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) + '</span>';
+        }
+
+        function renderRow(d) {
+            const ngo = d.acceptedByNgoName
+                ? `<div class="d-flex align-items-center gap-2">
+                       <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(d.acceptedByNgoName)}&background=3b82f6&color=fff" class="rounded-circle" width="24" height="24">
+                       <span>${d.acceptedByNgoName}</span>
+                   </div>`
+                : `<span class="text-muted small">—</span>`;
+            const location = d.locationAddress
+                ? `<span class="text-truncate d-inline-block" style="max-width:140px;" title="${d.locationAddress}">${d.locationAddress}</span>`
+                : `<span class="text-muted small">—</span>`;
+
+            return `<tr>
+                <td class="px-4"><code class="text-primary fw-bold">#DON-${d.id}</code></td>
+                <td><div class="small fw-semibold">${formatDate(d.createdAt)}</div></td>
+                <td>
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="bg-success bg-opacity-10 text-success p-2 rounded">
+                            <i class="fa-solid fa-leaf"></i>
+                        </div>
+                        <span class="fw-semibold">${d.title}</span>
+                    </div>
+                    <div class="small text-muted ms-5">${d.foodCategory || ''}</div>
+                </td>
+                <td><span class="fw-bold">${d.quantityKg}</span> <span class="text-muted small">kg</span></td>
+                <td>${ngo}</td>
+                <td class="small">${location}</td>
+                <td>${statusBadge(d.status)}</td>
+                <td class="px-4 text-end">
+                    <div class="dropdown">
+                        <button class="btn btn-light btn-sm rounded-circle p-0" style="width:30px;height:30px;" type="button" data-bs-toggle="dropdown">
+                            <i class="fa-solid fa-ellipsis-vertical"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                            <li><a class="dropdown-item small" href="#"><i class="fa-solid fa-eye me-2"></i> View Details</a></li>
+                            <li><a class="dropdown-item small" href="#"><i class="fa-solid fa-download me-2"></i> Impact Receipt</a></li>
+                        </ul>
+                    </div>
+                </td>
+            </tr>`;
+        }
+
+        let donorDonationsList = [];
+
+        async function loadHistory() {
+            const tbody = document.getElementById('history-tbody');
+            const countEl = document.getElementById('history-count');
+
+            if (!window.api || !window.api.getToken()) {
+                tbody.innerHTML = `<tr><td colspan="8" class="text-center py-4 text-muted">Please log in to view history.</td></tr>`;
+                countEl.textContent = '0 donations';
+                return;
+            }
+
+            try {
+                const donations = await window.api.get('/food/donor');
+                donorDonationsList = donations || [];
+                if (!donations || donations.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="8" class="text-center py-5">
+                        <div class="text-muted">
+                            <i class="fa-solid fa-box-open fs-3 mb-3 d-block"></i>
+                            No donations yet. <a href="/donor/upload" class="text-primary">Upload your first donation</a>
+                        </div>
+                    </td></tr>`;
+                    countEl.textContent = '0 donations';
+                } else {
+                    tbody.innerHTML = donations.map(renderRow).join('');
+                    countEl.textContent = `Showing ${donations.length} donation${donations.length !== 1 ? 's' : ''}`;
+                }
+            } catch (e) {
+                tbody.innerHTML = `<tr><td colspan="8" class="text-center py-4 text-danger">Failed to load history: ${e.message}</td></tr>`;
+                countEl.textContent = 'Error loading data';
+                console.error('History load error:', e);
+            }
+        }
+
+        function exportHistoryCSV() {
+            if (!donorDonationsList || donorDonationsList.length === 0) {
+                if (window.showToast) window.showToast('No history records to export.', 'warning');
+                return;
+            }
+            if (window.reportGenerator) {
+                const rows = donorDonationsList.map(d => ({
+                    ID: d.id,
+                    Title: d.title,
+                    Category: d.foodCategory,
+                    QuantityKg: d.quantityKg,
+                    Status: d.status,
+                    ExpiryTime: d.expiryTime,
+                    CreatedAt: d.createdAt,
+                    NGO: d.acceptedByNgoName || 'None'
+                }));
+                window.reportGenerator.exportToCSV(rows, 'donor_donation_history');
+                if (window.showToast) window.showToast('CSV export started!', 'success');
+            } else {
+                if (window.showToast) window.showToast('Export service unavailable.', 'danger');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', loadHistory);
+    </script>
+</body>
+</html>
+

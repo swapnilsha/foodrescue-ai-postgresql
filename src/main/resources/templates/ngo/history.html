@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/common :: head('Rescue History')}"></head>
+<body>
+
+    <div class="app-wrapper">
+        <aside th:replace="~{fragments/sidebar :: sidebar('history', 'NGO')}"></aside>
+
+        <div class="main-container">
+            <nav th:replace="~{fragments/navbar :: navbar}"></nav>
+
+            <main class="content-body">
+                <div class="d-flex justify-content-between align-items-end mb-5" data-aos="fade-down">
+                    <div>
+                        <h2 class="fw-bold mb-1">Collection &amp; Rescue History</h2>
+                        <p class="text-muted mb-0">Auditable logs of all successful food rescues performed by your organization.</p>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-outline-dark me-2" id="audit-pdf-btn" onclick="generateAuditReport()" aria-label="Generate audit PDF report"><i class="fa-solid fa-file-pdf me-2" aria-hidden="true"></i> Audit PDF</button>
+                        <button class="btn btn-dark" id="export-history-btn" onclick="exportHistoryCSV()" aria-label="Export rescue history to CSV"><i class="fa-solid fa-file-excel me-2" aria-hidden="true"></i> Export CSV</button>
+                    </div>
+                </div>
+
+                <!-- Stats summary -->
+                <div class="row g-4 mb-4" data-aos="fade-up">
+                    <div class="col-md-4">
+                        <div class="p-4 bg-white border rounded-4 shadow-sm text-center">
+                            <div class="small text-muted uppercase fw-bold mb-1">This Month</div>
+                            <h3 class="fw-bold text-success mb-0" id="ngo-hist-month-kg">1,245 kg</h3>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="p-4 bg-white border rounded-4 shadow-sm text-center">
+                            <div class="small text-muted uppercase fw-bold mb-1">Unique Donors</div>
+                            <h3 class="fw-bold text-primary mb-0" id="ngo-hist-donors">42</h3>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="p-4 bg-white border rounded-4 shadow-sm text-center">
+                            <div class="small text-muted uppercase fw-bold mb-1">Missions Completed</div>
+                            <h3 class="fw-bold text-dark mb-0" id="ngo-hist-missions">158</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Table -->
+                <div class="card-enterprise shadow-sm" data-aos="fade-up" data-aos-delay="100">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle" id="ngo-history-table">
+                            <thead class="bg-light">
+                                <tr class="small uppercase ls-1">
+                                    <th class="border-0 px-4">Mission ID</th>
+                                    <th class="border-0">Date</th>
+                                    <th class="border-0">Donor Organization</th>
+                                    <th class="border-0">Rescue Type</th>
+                                    <th class="border-0">Weight (kg)</th>
+                                    <th class="border-0 text-end px-4">Protocol Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="history-tbody">
+                                <!-- Loaded dynamically from database -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="p-4 border-top d-flex justify-content-between align-items-center">
+                        <div class="small text-muted" id="ngo-hist-count">Showing 0 historical missions</div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <nav th:replace="~{fragments/common :: scripts}"></nav>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            loadHistory();
+        });
+
+        async function loadHistory() {
+            const tbody = document.getElementById('history-tbody');
+            if (!tbody || !window.api) return;
+
+            tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4"><div class="spinner-border text-primary" role="status"></div></td></tr>`;
+
+            try {
+                const requests = await window.api.get('/requests/ngo');
+                if (!requests) throw new Error("No data returned");
+
+                // Filter for completed/terminal statuses
+                const history = requests.filter(r => 
+                    r.status === 'DELIVERED' || 
+                    r.status === 'RECEIVED' || 
+                    r.status === 'REJECTED' ||
+                    r.status === 'CANCELLED'
+                );
+
+                // Calculate Summary Statistics
+                const completed = history.filter(r => r.status === 'DELIVERED' || r.status === 'RECEIVED');
+                const totalKg = completed.reduce((sum, r) => sum + (parseFloat(r.receivedQuantityKg || r.donationQuantityKg) || 0), 0);
+                
+                const uniqueDonors = new Set(history.map(r => r.donorName)).size;
+
+                document.getElementById('ngo-hist-month-kg').textContent = totalKg.toFixed(1) + ' kg';
+                document.getElementById('ngo-hist-donors').textContent = uniqueDonors;
+                document.getElementById('ngo-hist-missions').textContent = completed.length;
+                document.getElementById('ngo-hist-count').textContent = `Showing ${history.length} historical missions`;
+
+                if (history.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="6" class="text-center py-5 text-muted">
+                        <i class="fa-solid fa-clipboard-check fs-2 opacity-25 mb-3 d-block"></i>
+                        No rescue history available
+                    </td></tr>`;
+                    return;
+                }
+
+                tbody.innerHTML = history.map(r => {
+                    const dateStr = r.requestedAt ? new Date(r.requestedAt).toLocaleDateString([], {day:'2-digit', month:'short', year:'numeric'}) : 'N/A';
+                    const timeStr = r.requestedAt ? new Date(r.requestedAt).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : 'N/A';
+                    const weight = r.receivedQuantityKg || r.donationQuantityKg || '—';
+                    const cat = (r.donationFoodCategory || 'OTHER').toUpperCase();
+                    
+                    return `
+                        <tr>
+                            <td class="px-4 fw-bold text-primary">#MSN-REQ-${r.id}</td>
+                            <td>
+                                <div class="small fw-semibold">${dateStr}</div>
+                                <div class="extra-small text-muted">${timeStr}</div>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(r.donorName || 'Donor')}&background=random" class="rounded-circle" width="28">
+                                    <span class="small fw-bold">${r.donorName || 'Donor'}</span>
+                                </div>
+                            </td>
+                            <td><span class="badge bg-info bg-opacity-10 text-info fw-bold">${cat}</span></td>
+                            <td><span class="fw-bold">${weight}</span></td>
+                            <td class="text-end px-4">
+                                <span class="badge bg-${statusColor(r.status)} bg-opacity-10 text-${statusColor(r.status)} fw-bold">
+                                    ${r.status}
+                                </span>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+
+            } catch (err) {
+                console.error("Failed to load NGO rescue history:", err);
+                tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-danger">Failed to load history: ${err.message}</td></tr>`;
+            }
+        }
+
+        function statusColor(status) {
+            const map = { DELIVERED: 'success', RECEIVED: 'success', REJECTED: 'danger', CANCELLED: 'secondary' };
+            return map[status] || 'secondary';
+        }
+
+        function exportHistoryCSV() {
+            if (window.enterpriseTables) {
+                window.enterpriseTables.exportToCSV('ngo-history-table');
+                if (window.showToast) window.showToast('CSV export started! Your file is downloading.', 'success');
+            } else {
+                if (window.showToast) window.showToast('Export service unavailable.', 'danger');
+            }
+        }
+
+        function generateAuditReport() {
+            if (window.reportGenerator) {
+                window.reportGenerator.generateReport('ngo-rescue-audit', { format: 'pdf' });
+                if (window.showToast) window.showToast('Generating audit PDF report…', 'info');
+            } else {
+                if (window.showToast) window.showToast('Report generator unavailable.', 'danger');
+            }
+        }
+    </script>
+    <style>
+        .ls-1 { letter-spacing: 0.05em; }
+        .uppercase { text-transform: uppercase; }
+        .extra-small { font-size: 0.65rem; }
+    </style>
+</body>
+</html>

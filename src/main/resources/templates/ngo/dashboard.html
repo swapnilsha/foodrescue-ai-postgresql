@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/common :: head('NGO Mission Control')}"></head>
+<body>
+
+    <div class="app-wrapper">
+        <aside th:replace="~{fragments/sidebar :: sidebar('dashboard', 'NGO')}"></aside>
+
+        <div class="main-container">
+            <nav th:replace="~{fragments/navbar :: navbar}"></nav>
+
+            <main class="content-body">
+                <div class="d-flex justify-content-between align-items-center mb-5" data-aos="fade-down">
+                    <div>
+                        <h2 class="fw-bold mb-1">Mission Control Centre 🛰️</h2>
+                        <p class="text-muted mb-0">Welcome, <span class="text-dark fw-bold" id="ngo-org-name">your organization</span>. <span id="ngo-pickup-summary">Loading active missions…</span></p>
+                    </div>
+                    <div class="d-flex gap-3">
+                        <a href="/ngo/map" class="btn btn-dark px-4 shadow-sm">
+                            <i class="fa-solid fa-map-location-dot me-2"></i> Launch Live Map
+                        </a>
+                    </div>
+                </div>
+
+                <!-- NGO Stat Cards (BUG FIX: using dynamic workflow counters) -->
+                <div class="row row-cols-1 row-cols-sm-2 row-cols-md-5 g-4 mb-5" id="ngo-stat-cards">
+                    <div class="col" data-aos="fade-up" data-aos-delay="100">
+                        <div class="card-enterprise border-0 shadow-sm border-start border-warning border-4 h-100 p-3">
+                            <div class="text-muted small fw-bold text-uppercase mb-2" style="font-size: 0.7rem;">Pending Requests</div>
+                            <div class="d-flex align-items-center justify-content-between">
+                                <h2 class="mb-0 fw-800" id="cnt-pending">—</h2>
+                                <div class="bg-warning bg-opacity-10 text-warning p-2 rounded-circle">
+                                    <i class="fa-solid fa-clock-rotate-left fs-5"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col" data-aos="fade-up" data-aos-delay="200">
+                        <div class="card-enterprise border-0 shadow-sm border-start border-primary border-4 h-100 p-3">
+                            <div class="text-muted small fw-bold text-uppercase mb-2" style="font-size: 0.7rem;">Accepted</div>
+                            <div class="d-flex align-items-center justify-content-between">
+                                <h2 class="mb-0 fw-800" id="cnt-accepted">—</h2>
+                                <div class="bg-primary bg-opacity-10 text-primary p-2 rounded-circle">
+                                    <i class="fa-solid fa-circle-check fs-5"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col" data-aos="fade-up" data-aos-delay="300">
+                        <div class="card-enterprise border-0 shadow-sm border-start border-info border-4 h-100 p-3">
+                            <div class="text-muted small fw-bold text-uppercase mb-2" style="font-size: 0.7rem;">Active Deliveries</div>
+                            <div class="d-flex align-items-center justify-content-between">
+                                <h2 class="mb-0 fw-800" id="cnt-active">—</h2>
+                                <div class="bg-info bg-opacity-10 text-info p-2 rounded-circle">
+                                    <i class="fa-solid fa-truck-fast fs-5"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col" data-aos="fade-up" data-aos-delay="400">
+                        <div class="card-enterprise border-0 shadow-sm border-start border-success border-4 h-100 p-3">
+                            <div class="text-muted small fw-bold text-uppercase mb-2" style="font-size: 0.7rem;">Completed</div>
+                            <div class="d-flex align-items-center justify-content-between">
+                                <h2 class="mb-0 fw-800" id="cnt-completed">—</h2>
+                                <div class="bg-success bg-opacity-10 text-success p-2 rounded-circle">
+                                    <i class="fa-solid fa-clipboard-check fs-5"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col" data-aos="fade-up" data-aos-delay="500">
+                        <div class="card-enterprise border-0 shadow-sm border-start border-danger border-4 h-100 p-3">
+                            <div class="text-muted small fw-bold text-uppercase mb-2" style="font-size: 0.7rem;">Rejected</div>
+                            <div class="d-flex align-items-center justify-content-between">
+                                <h2 class="mb-0 fw-800" id="cnt-rejected">—</h2>
+                                <div class="bg-danger bg-opacity-10 text-danger p-2 rounded-circle">
+                                    <i class="fa-solid fa-xmark fs-5"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-4">
+                    <!-- Urgent Pickups -->
+                    <div class="col-lg-8" data-aos="fade-up">
+                        <div class="card-enterprise">
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                <h5 class="fw-bold mb-0">Urgent Rescue Opportunities</h5>
+                                <a href="/ngo/nearby" class="small fw-bold text-primary text-decoration-none">View All Nearby</a>
+                            </div>
+                            
+                            <div class="d-flex flex-column gap-3" id="urgent-opportunities-container">
+                                <div class="text-center py-4"><div class="spinner-border text-success" role="status"></div></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- NGO Performance -->
+                    <div class="col-lg-4" data-aos="fade-up" data-aos-delay="100">
+                        <div class="card-enterprise h-100">
+                            <h5 class="fw-bold mb-4">Rescue Performance</h5>
+                            <div class="text-center py-4 mb-4 border-bottom">
+                                <div class="position-relative d-inline-block">
+                                    <canvas id="responseRateChart" width="150" height="150"></canvas>
+                                    <div class="position-absolute top-50 start-50 translate-middle">
+                                        <h3 class="fw-bold mb-0" id="ngo-performance-rate">0%</h3>
+                                        <p class="small text-muted mb-0">Response</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="d-flex flex-column gap-3">
+                                <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded-4">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="bg-success p-2 rounded-circle"></div>
+                                        <span class="small fw-bold">Avg. Acceptance</span>
+                                    </div>
+                                    <span class="small fw-800" id="ngo-performance-avg-acceptance">0 mins</span>
+                                </div>
+                                <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded-4">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="bg-primary p-2 rounded-circle"></div>
+                                        <span class="small fw-bold">Fulfillment Rate</span>
+                                    </div>
+                                    <span class="small fw-800" id="ngo-performance-fulfillment">0%</span>
+                                </div>
+                            </div>
+                            <div class="mt-4 text-center">
+                                <p class="small text-muted mb-3" id="ngo-performance-families">You've rescued food for <span class="text-dark fw-bold">0 local families</span> this month.</p>
+                                <button class="btn btn-enterprise btn-enterprise-primary w-100 btn-sm">Download Impact PDF</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- ── Incoming Donation Requests (real data) ── -->
+                <div class="row g-4 mt-2" data-aos="fade-up" data-aos-delay="200">
+                    <div class="col-12">
+                        <div class="card-enterprise">
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                <h5 class="fw-bold mb-0">
+                                    <i class="fa-solid fa-inbox text-danger me-2"></i>Incoming Donation Requests
+                                </h5>
+                                <a href="/ngo/requests" class="small fw-bold text-primary text-decoration-none">View All →</a>
+                            </div>
+                            <div id="incoming-requests-list">
+                                <div class="text-center py-4"><div class="spinner-border text-success" role="status" style="width:1.2rem;height:1.2rem;"></div></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Mobile Nav -->
+    <nav th:replace="~{fragments/common :: scripts}"></nav>
+    <!-- Load donation-request.js -->
+    <script th:src="@{/js/donation-request.js}"></script>
+    <div class="mobile-nav">
+        <a href="/ngo/dashboard" class="mobile-nav-item active"><i class="fa-solid fa-compass"></i><span>Missions</span></a>
+        <a href="/ngo/map" class="mobile-nav-item"><i class="fa-solid fa-map-location-dot"></i><span>Map</span></a>
+        <a href="/ngo/nearby" class="mobile-nav-item"><i class="fa-solid fa-location-dot"></i><span>Nearby</span></a>
+        <a href="/ngo/requests" class="mobile-nav-item"><i class="fa-solid fa-inbox"></i><span>Requests</span></a>
+        <a href="/ngo/profile" class="mobile-nav-item"><i class="fa-solid fa-building-ngo"></i><span>Org</span></a>
+    </div>
+
+    <script>
+        let responseRateChart = null;
+
+        function renderResponseChart(successRate) {
+            const respCtx = document.getElementById('responseRateChart').getContext('2d');
+            if (!respCtx) return;
+            if (responseRateChart) responseRateChart.destroy();
+            responseRateChart = new Chart(respCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Responded', 'Pending'],
+                    datasets: [{
+                        data: [successRate, 100 - successRate],
+                        backgroundColor: ['#10b981', '#f1f5f9'],
+                        borderWidth: 0
+                    }]
+                },
+                options: { cutout: '85%', plugins: { legend: { display: false } } }
+            });
+        }
+
+        async function loadIncomingRequests() {
+            const container = document.getElementById('incoming-requests-list');
+            try {
+                const requests = await window.drService.loadNgoRequests();
+                
+                // Update dashboard counters dynamically
+                const pendingCount = requests.filter(r => r.status === 'PENDING').length;
+                const acceptedCount = requests.filter(r => r.status === 'ACCEPTED').length;
+                const activeCount = requests.filter(r => ['ASSIGNED','PICKUP_IN_PROGRESS','COLLECTED','RECEIVED'].includes(r.status)).length;
+                const completedCount = requests.filter(r => r.status === 'DELIVERED').length;
+                const rejectedCount = requests.filter(r => r.status === 'REJECTED').length;
+
+                if (document.getElementById('cnt-pending')) document.getElementById('cnt-pending').textContent = pendingCount;
+                if (document.getElementById('cnt-accepted')) document.getElementById('cnt-accepted').textContent = acceptedCount;
+                if (document.getElementById('cnt-active')) document.getElementById('cnt-active').textContent = activeCount;
+                if (document.getElementById('cnt-completed')) document.getElementById('cnt-completed').textContent = completedCount;
+                if (document.getElementById('cnt-rejected')) document.getElementById('cnt-rejected').textContent = rejectedCount;
+
+                // Update header pickup summary
+                const summaryEl = document.getElementById('ngo-pickup-summary');
+                if (summaryEl) {
+                    if (pendingCount > 0) {
+                        summaryEl.innerHTML = `You have <span class="text-danger fw-bold">${pendingCount} pending pickup${pendingCount !== 1 ? 's' : ''}</span> awaiting your response.`;
+                    } else {
+                        summaryEl.textContent = 'No pending pickups right now.';
+                    }
+                }
+
+                // Calculate response rate
+                const total = requests.length;
+                const responded = requests.filter(r => r.status !== 'PENDING').length;
+                const rate = total > 0 ? Math.round((responded / total) * 100) : 100;
+                renderResponseChart(rate);
+
+                if (!container) return;
+
+                const pending = requests.filter(r => r.status === 'PENDING').slice(0, 3);
+                if (pending.length === 0) {
+                    container.innerHTML = '<p class="text-muted text-center py-3 small">No pending requests.</p>';
+                    return;
+                }
+                container.innerHTML = pending.map(r => `
+                    <div class="p-3 border rounded-4 mb-3 border-danger border-opacity-25 bg-danger bg-opacity-5">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <span class="badge bg-danger text-white small mb-1">🔔 New Request</span>
+                                <h6 class="fw-bold mb-0">${r.donationTitle}</h6>
+                            </div>
+                            ${window.drService.statusBadge(r.status)}
+                        </div>
+                        <div class="small text-muted mb-2">
+                            <i class="fa-solid fa-user me-1"></i>${r.donorName}
+                            &nbsp;•&nbsp;<i class="fa-solid fa-weight-hanging me-1"></i>${r.donationQuantityKg} kg
+                            ${r.donationExpiryTime ? '&nbsp;•&nbsp;<i class="fa-solid fa-clock me-1"></i>Exp: ' + window.drService.formatDateTime(r.donationExpiryTime) : ''}
+                        </div>
+                        <div class="d-flex gap-2 mt-2">
+                            <a href="/ngo/requests" class="btn btn-sm btn-outline-dark rounded-pill px-3">View</a>
+                            <button class="btn btn-sm btn-success rounded-pill px-3" onclick="window.drService.handleAccept(${r.id})">
+                                <i class="fa-solid fa-check me-1"></i>Accept
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger rounded-pill px-3" onclick="window.drService.handleReject(${r.id})">
+                                <i class="fa-solid fa-x me-1"></i>Reject
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (e) {
+                if (container) container.innerHTML = `<p class="text-muted small text-center py-3">Could not load requests.</p>`;
+            }
+        }
+
+        async function loadUrgentOpportunities() {
+            const container = document.getElementById('urgent-opportunities-container');
+            if (!container || !window.api) return;
+
+            try {
+                const donations = await window.api.get('/food');
+                const available = donations.filter(d => d.status === 'AVAILABLE');
+                
+                if (available.length === 0) {
+                    container.innerHTML = '<p class="text-muted text-center py-4 small bg-light rounded-4">No food rescue opportunities available.</p>';
+                    return;
+                }
+
+                // Sort by urgency, then by date desc
+                available.sort((a, b) => {
+                    const isAUrgent = a.urgency === 'HIGH' || a.urgency === 'CRITICAL';
+                    const isBUrgent = b.urgency === 'HIGH' || b.urgency === 'CRITICAL';
+                    if (isAUrgent && !isBUrgent) return -1;
+                    if (!isAUrgent && isBUrgent) return 1;
+                    return new Date(b.createdAt) - new Date(a.createdAt);
+                });
+
+                container.innerHTML = available.slice(0, 3).map(d => {
+                    const isUrgent = d.urgency === 'HIGH' || d.urgency === 'CRITICAL';
+                    return `
+                        <div class="p-4 border rounded-4 ${isUrgent ? 'border-danger border-opacity-25 bg-danger bg-opacity-5' : 'border-custom bg-white transition-hover'} position-relative overflow-hidden mb-3">
+                            <div class="position-absolute top-0 end-0 p-3">
+                                <span class="badge bg-${isUrgent ? 'danger' : 'success'} rounded-pill px-3">${isUrgent ? 'EXPIRING SOON' : 'AVAILABLE'}</span>
+                            </div>
+                            <div class="row align-items-center g-4">
+                                <div class="col-md-2 text-center text-md-start">
+                                    <img src="${d.imagePath ? '/uploads/' + d.imagePath : 'https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?auto=format&fit=crop&q=80&w=150'}" class="rounded-4 img-fluid" style="width: 100px; height: 100px; object-fit: cover;">
+                                </div>
+                                <div class="col-md-6">
+                                    <h5 class="fw-bold mb-1">${d.title}</h5>
+                                    <p class="text-muted small mb-3"><i class="fa-solid fa-building me-2"></i> ${d.donorName || 'Donor'} • <span class="text-dark fw-bold">${d.locationAddress || 'Nearby'}</span></p>
+                                    <div class="d-flex gap-3 text-muted small">
+                                        <span><i class="fa-solid fa-clock me-1"></i> ${d.expiryTime ? new Date(d.expiryTime).toLocaleDateString([], {day:'2-digit', month:'short'}) : 'N/A'}</span>
+                                        <span><i class="fa-solid fa-weight-hanging me-1"></i> ${d.quantityKg} kg</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 text-md-end">
+                                    <a href="/ngo/nearby" class="btn btn-${isUrgent ? 'danger' : 'outline-dark'} px-4 rounded-pill fw-bold">Accept Mission</a>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            } catch (e) {
+                console.error("Failed to load urgent opportunities:", e);
+                container.innerHTML = '<p class="text-muted text-center py-4 small">No food rescue opportunities available.</p>';
+            }
+        }
+
+        async function loadNgoPerformance() {
+            if (!window.api) return;
+            try {
+                const stats = await window.api.get('/ngo/analytics/stats');
+                if (!stats) return;
+
+                const successRate = stats.successRate || 0;
+                document.getElementById('ngo-performance-rate').textContent = successRate + '%';
+                renderResponseChart(successRate);
+
+                document.getElementById('ngo-performance-avg-acceptance').textContent = (stats.avgResponseTimeMinutes || 0) + ' mins';
+                document.getElementById('ngo-performance-fulfillment').textContent = successRate + '%';
+
+                const totalKg = stats.totalQuantityRescuedKg || 0;
+                const families = Math.round(totalKg * 2);
+                document.getElementById('ngo-performance-families').innerHTML = `You've rescued food for <span class="text-dark fw-bold">${families} local families</span> this month.`;
+
+            } catch (err) {
+                console.warn("Failed to load NGO performance stats:", err);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Populate org name from stateManager
+            if (window.stateManager) {
+                const applyOrgName = (user) => {
+                    const orgNameEl = document.getElementById('ngo-org-name');
+                    if (orgNameEl && user) {
+                        orgNameEl.textContent = user.organizationName || user.name || 'your organization';
+                    }
+                };
+                applyOrgName(window.stateManager.getUser());
+                window.stateManager.on('userChanged', applyOrgName);
+            }
+
+            renderResponseChart(100);
+            loadIncomingRequests();
+            loadUrgentOpportunities();
+            loadNgoPerformance();
+        });
+    </script>
+    <style>
+        .fw-800 { font-weight: 800; }
+        .transition-hover { transition: var(--transition); }
+        .transition-hover:hover { border-color: var(--primary) !important; transform: translateY(-3px); }
+    </style>
+</body>
+</html>
+
